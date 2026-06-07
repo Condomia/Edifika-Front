@@ -16,19 +16,28 @@
   <form class="login-fields">
     <label>EMAIL ADDRESS</label>
     <div class="input-row">
-      <span class="material-icons">mail</span>
+      <span class="material-icons-outlined">mail</span>
       <input type="email" value="admin@edifika.com">
     </div>
 
     <label>PASSWORD</label>
     <div class="input-row">
-      <span class="material-icons">lock</span>
+      <span class="material-icons-outlined">lock</span>
       <input type="password" value="123456">
       <span class="material-icons">visibility</span>
     </div>
 
+    <div class="form-options">
+      <label class="remember-option">
+        <input type="checkbox">
+        <span>Remember this account</span>
+      </label>
+
+      <a href="#" class="forgot-link">Forgot password?</a>
+    </div>
+
     <button type="submit" class="login-button">Login to Dashboard</button>
-    <button type="button" class="register-button">Register New Account</button>
+    <button type="button" class="register-button" (click)="goToRegister()">Register New Account</button>
   </form>
 
 </div>
