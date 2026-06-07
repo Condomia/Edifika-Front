@@ -1,0 +1,52 @@
+<div class="layout">
+  <aside class="sidebar">
+    <div class="sidebar-header">
+      <div class="logo">
+        <span class="material-icons">corporate_fare</span>
+        <div class="logo-text">
+          <span class="logo-name">Edifika</span>
+          <span class="logo-subtitle">RESIDENTIAL PLATFORM</span>
+        </div>
+      </div>
+    </div>
+
+    <nav class="sidebar-nav">
+      @for (item of navItems; track item.route) {
+        <a class="nav-item" [routerLink]="item.route" routerLinkActive="active">
+          <span class="material-icons-outlined">{{ item.icon }}</span>
+          <span class="nav-label">{{ item.label }}</span>
+        </a>
+      }
+    </nav>
+
+    <div class="sidebar-footer">
+      <a class="nav-item" routerLink="/app/settings" routerLinkActive="active">
+        <span class="material-icons-outlined">settings</span>
+        <span class="nav-label">Settings</span>
+      </a>
+      <button class="nav-item logout-btn" (click)="logout()">
+        <span class="material-icons-outlined">logout</span>
+        <span class="nav-label">Logout</span>
+      </button>
+    </div>
+  </aside>
+
+  <div class="content">
+    <header class="topbar">
+      <div class="topbar-actions">
+        <button class="topbar-btn">
+          <span class="material-icons-outlined">notifications</span>
+        </button>
+        <button class="topbar-btn">
+          <span class="material-icons-outlined">diamond</span>
+        </button>
+        <div class="user-avatar">
+          <span class="material-icons">account_circle</span>
+        </div>
+      </div>
+    </header>
+    <main class="main-content">
+      <router-outlet></router-outlet>
+    </main>
+  </div>
+</div>

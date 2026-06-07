@@ -8,9 +8,13 @@ import { Router } from '@angular/router';
   styleUrl: './login.css',
 })
 export class Login {
-constructor(private router: Router) {
-}
-goToRegister() {
-  this.router.navigate(['register']);
-}
+  constructor(private router: Router) {}
+
+  login() {
+    this.router.navigate(['/app/dashboard']);
+  }
+
+  goToRegister() {
+    this.router.navigate(['register']);
+  }
 }
