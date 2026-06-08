@@ -1,5 +1,5 @@
 export const environment = {
-  production: true,
+  production: false,
   serverBaseUrl: 'http://localhost:3000',
   userEndpointPath: '/users',
   rolesEndpointPath: '/roles',

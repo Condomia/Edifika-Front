@@ -17,7 +17,7 @@ export const routes: Routes = [
       { path: 'common-areas', loadComponent: () => import('./core/common-areas/common-areas').then(m => m.CommonAreas) },
       { path: 'finance', loadComponent: () => import('./core/finance/finance').then(m => m.Finance) },
       { path: 'community-wall', loadComponent: () => import('./core/community-wall/community-wall').then(m => m.CommunityWall) },
-      { path: 'settings', loadComponent: () => import('./features/settings/settings').then(m => m.Settings) }
+      { path: 'settings', loadComponent: () => import('./core/settings/settings').then(m => m.Settings) }
     ]
   },
   { path: '**', redirectTo: 'login' }

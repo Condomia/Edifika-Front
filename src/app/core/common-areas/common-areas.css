@@ -3,8 +3,60 @@
   background-color: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  width: 80vw;
+  min-height: 100vh;
+  display: flex;
 }
-h1 {
+.app-calendar{
+  width: 100%;
+}
+.calendar-container{
+  width: 70%;
+  min-height: 100vh;
+  background-color: white;
+
+}
+.area-container{
+  display: flex;
+  width: 30%;
+  min-height: 100vh;
+  background-color: white;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+
+}
+.area-title{
   font-family: 'Inter', sans-serif;
-  color: #211821;
+  background-color: #8B088F;
+  width: 90%;
+  min-height: 120px;
+  margin-top: 16px;
+  border-radius: 10px;
+  padding: 10px;
+  box-sizing: border-box;
+  overflow: hidden;
+
+}
+.area-title h1{
+  color: white;
+  line-height: 1.1;
+  margin: 0 0 12px 0;
+  font-weight: 700;
+  font-size: 28px;
+
+}
+.area-title p{
+  color: #FFFFFF;
+  font-weight: normal;
+  line-height: 1.4;
+  margin: 0;
+font-size: 14px;
+}
+.area-list{
+  display: flex;
+  flex-direction: column;
+  width: 90%;
+  height: 75%;
+  background-color: white;
 }

@@ -1,8 +1,25 @@
+export type CommonAreaType =
+  | 'POOL'
+  | 'GYM'
+  | 'COWORKING_ROOM'
+  | 'BBQ_AREA'
+  | 'PARTY_ROOM'
+  | 'MEETING_ROOM'
+  | 'SPORTS_COURT'
+  | 'PLAYGROUND'
+  | 'TERRACE'
+  | 'LOUNGE'
+  | 'PARKING_AREA'
+  | 'LAUNDRY_ROOM'
+  | 'PET_AREA'
+  | 'GARDEN'
+  | 'MULTIPURPOSE_ROOM';
+
 export interface CommonArea {
-  id_common_area: number;
-  id_building: number;
+  id: number;
   name: string;
-  description: string;
-  capacity: string;
-  status: string;
+  type: CommonAreaType;
+  status: 'AVAILABLE' | 'MAINTENANCE';
+  maxCapacity: number;
+  bookingType: 'EXCLUSIVE' | 'SHARED';
 }

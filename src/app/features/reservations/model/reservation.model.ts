@@ -1,9 +1,11 @@
 export interface Reservation {
-  id_reservation: number;
-  id_common_area: number;
-  id_user: number;
-  reservation_date: string;
-  start_time: string;
-  end_time: string;
-  status: string;
+  id: number;
+  residentId: number;
+  commonAreaId: number;
+  reservationDate: string;
+  timeSlot: number;
+  numberOfGuests: number;
+  status: 'ACTIVE' | 'CANCELLED';
+  qrCodeAccess: string;
+  penaltyApplied: boolean;
 }
