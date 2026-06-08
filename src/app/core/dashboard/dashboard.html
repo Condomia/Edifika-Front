@@ -1,3 +1,200 @@
-<div class="page-container">
-  <h1>Bienvenido a Dashboard</h1>
+<div class="dashboard-wrapper">
+  <div class="header-section">
+    <div class="header-title">
+      <h1>Dashboard Overview</h1>
+      <p>Welcome back, Elena. Here's what's happening at Edifika Residence today.</p>
+    </div>
+    <button class="date-picker-btn">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect><line x1="16" y1="2" x2="16" y2="6"></line><line x1="8" y1="2" x2="8" y2="6"></line><line x1="3" y1="10" x2="21" y2="10"></line></svg>
+      OCT 24, 2023
+    </button>
+  </div>
+
+  <div class="quick-actions">
+    <button class="action-btn">
+      <span class="icon purple-text"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M13.73 21a2 2 0 0 1-3.46 0"></path></svg></span>
+      New Alert
+    </button>
+    <button class="action-btn">
+      <span class="icon purple-text"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg></span>
+      Publish Post
+    </button>
+    <button class="action-btn">
+      <span class="icon purple-text"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline><line x1="16" y1="13" x2="8" y2="13"></line><line x1="16" y1="17" x2="8" y2="17"></line><polyline points="10 9 9 9 8 9"></polyline></svg></span>
+      Issue Invoice
+    </button>
+    <button class="action-btn">
+      <span class="icon purple-text"><svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path></svg></span>
+      Work Order
+    </button>
+  </div>
+
+  <div class="dashboard-grid">
+    <div class="grid-column left-column">
+      <div class="card occupancy-card">
+        <div class="card-header">
+          <div class="icon-bg purple-bg-light">
+             <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A0B80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg>
+          </div>
+          <span class="trend purple-text bold-text">+2% MOM</span>
+        </div>
+        <div class="card-subtitle small-text">BUILDING OCCUPANCY</div>
+        <div class="card-value-row">
+          <span class="main-val">98%</span>
+          <span class="sub-val">245/250 Units</span>
+        </div>
+        <div class="progress-bar">
+          <div class="progress-fill" style="width: 98%;"></div>
+        </div>
+      </div>
+
+      <div class="card tickets-card">
+        <div class="card-header">
+          <div class="icon-bg red-bg-light">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#E53935" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 9a3 3 0 0 1 0 6v2a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-2a3 3 0 0 1 0-6V7a2 2 0 0 0-2-2H4a2 2 0 0 0-2 2Z"></path><path d="M13 5v2"></path><path d="M13 17v2"></path><path d="M13 11v2"></path></svg>
+          </div>
+          <span class="trend red-text bold-text">URGENT ACTION</span>
+        </div>
+        <div class="card-subtitle small-text">ACTIVE TICKETS</div>
+        <div class="card-value-row">
+          <span class="main-val">24</span>
+          <span class="sub-val">Resolving average 4h</span>
+        </div>
+        <div class="card-divider"></div>
+        <div class="card-footer-text text-gray">
+          8 plumbing issues reported in Tower B
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-column right-column">
+      <div class="card financial-card h-100">
+        <div class="fin-header">
+          <div>
+            <h2 class="card-title">Financial Performance</h2>
+            <p class="text-gray subtitle-text">Monthly Delinquency Rate Comparison</p>
+          </div>
+          <div class="toggle-btns">
+            <button class="active">6 Months</button>
+            <button>Yearly</button>
+          </div>
+        </div>
+        
+        <div class="chart-container">
+          <div class="chart-area">
+            <!-- Chart goes here -->
+          </div>
+          <div class="x-axis-labels text-gray">
+            <span>MAY</span><span>JUN</span><span>JUL</span><span>AUG</span><span>SEP</span><span>OCT</span>
+          </div>
+        </div>
+        
+        <div class="card-divider mb-3"></div>
+
+        <div class="fin-footer">
+          <div class="fin-stat">
+            <span class="label small-text">TOTAL COLLECTED</span>
+            <span class="val large-val">$142,500.00</span>
+          </div>
+          <div class="fin-stat">
+            <span class="label small-text">CURRENT DELINQUENCY</span>
+            <span class="val large-val red-text">1.2%</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-column left-column">
+      <div class="card list-card">
+        <div class="list-header space-between">
+          <h2 class="card-title">Pending Reservations</h2>
+          <a href="#" class="view-all purple-text bold-text">View All</a>
+        </div>
+        <div class="list-content">
+          <!-- Items -->
+          <div class="list-item">
+            <div class="item-icon-wrapper pink-bg-light">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A0B80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M2 12h20"></path><path d="M12 2v20"></path><path d="M20 16v4"></path><path d="M4 16v4"></path></svg>
+            </div>
+            <div class="item-details">
+              <span class="title">Rooftop Pool</span>
+              <span class="desc text-gray">Unit 1204 - Marcus Thorne</span>
+            </div>
+            <div class="item-meta">
+              <span class="date-label text-gray">DATE</span>
+              <span class="date-val">Oct 26 • 14:00</span>
+            </div>
+            <div class="item-actions">
+              <button class="btn-icon btn-reject"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+              <button class="btn-icon btn-approve"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="item-icon-wrapper pink-bg-light">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A0B80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="16"></line><line x1="8" y1="12" x2="16" y2="12"></line></svg>
+            </div>
+            <div class="item-details">
+              <span class="title">Tennis Court A</span>
+              <span class="desc text-gray">Unit 0502 - Sarah Jenkins</span>
+            </div>
+            <div class="item-meta">
+               <span class="date-label text-gray">DATE</span>
+              <span class="date-val">Oct 25 • 09:00</span>
+            </div>
+            <div class="item-actions">
+              <button class="btn-icon btn-reject"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+              <button class="btn-icon btn-approve"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+            </div>
+          </div>
+          <div class="list-item">
+            <div class="item-icon-wrapper pink-bg-light">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A0B80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>
+            </div>
+            <div class="item-details">
+              <span class="title">Event Salon</span>
+              <span class="desc text-gray">Unit 1801 - Robert Chen</span>
+            </div>
+            <div class="item-meta">
+               <span class="date-label text-gray">DATE</span>
+              <span class="date-val">Oct 29 • 18:00</span>
+            </div>
+            <div class="item-actions">
+              <button class="btn-icon btn-reject"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg></button>
+              <button class="btn-icon btn-approve"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg></button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid-column right-column">
+      <div class="card list-card p-0">
+        <div class="p-4 pb-0">
+          <h2 class="card-title mb-1">Community Wall</h2>
+          <p class="text-gray subtitle-text mb-4">Latest updates from Residents</p>
+        </div>
+        <div class="list-content px-4">
+          <div class="wall-item">
+            <div class="author-info">
+              <img src="https://i.pravatar.cc/150?u=a042581f4e29026704d" alt="LM" class="avatar" />
+              <span class="author-name">Leo Martinez (Unit 304)</span>
+            </div>
+            <p class="wall-text">"Is the main elevator maintenance finishing today as scheduled?"</p>
+            <span class="wall-time text-gray small-text">12 MINUTES AGO</span>
+          </div>
+          <div class="wall-item">
+            <div class="author-info">
+              <img src="https://i.pravatar.cc/150?u=a042581f4e29026704e" alt="JP" class="avatar" />
+              <span class="author-name">Jessica Park (Unit 912)</span>
+            </div>
+            <p class="wall-text">"Lost a set of blue keys near the gym area. If anyone finds them, please let me know!"</p>
+            <span class="wall-time text-gray small-text">45 MINUTES AGO</span>
+          </div>
+        </div>
+        <div class="p-4 pt-0">
+          <button class="btn-full-width">Open Community Wall</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
