@@ -60,3 +60,21 @@ font-size: 14px;
   height: 75%;
   background-color: white;
 }
+
+.add-area-button {
+  width: 90%;
+  height: 48px;
+  border: none;
+  border-radius: 12px;
+  background-color: #97009c;
+  color: white;
+  font-family: 'Inter', sans-serif;
+  font-size: 16px;
+  font-weight: 700;
+  cursor: pointer;
+  margin-top: 12px;
+}
+
+.add-area-button:hover {
+  background-color: #7d0082;
+}

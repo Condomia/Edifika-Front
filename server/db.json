@@ -183,6 +183,22 @@
       "status": "AVAILABLE",
       "maxCapacity": 8,
       "bookingType": "SHARED"
+    },
+    {
+      "id": 4,
+      "name": "Parrila",
+      "type": "BBQ_AREA",
+      "status": "AVAILABLE",
+      "maxCapacity": 8,
+      "bookingType": "SHARED"
+    },
+    {
+      "id": 5,
+      "name": "Terraza",
+      "type": "TERRACE",
+      "status": "AVAILABLE",
+      "maxCapacity": 8,
+      "bookingType": "SHARED"
     }
   ],
 

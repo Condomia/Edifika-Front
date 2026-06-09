@@ -14,7 +14,7 @@ import { UsersService } from '../../services/users.service';
 export class UserFormComponent implements OnInit {
   @Input() user: User | null = null;
   @Output() close = new EventEmitter<boolean>();
-  
+
   userForm!: FormGroup;
   isSubmitting = false;
 
@@ -22,18 +22,18 @@ export class UserFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.userForm = this.fb.group({
-      user: [this.user?.user || '', [Validators.required, Validators.minLength(3)]],
+      user: [this.user?.fullName || '', [Validators.required, Validators.minLength(3)]],
       email: [this.user?.email || '', [Validators.required, Validators.email]],
-      telefono: [this.user?.telefono || '', [Validators.pattern('^[0-9]+$')]],
+      telefono: [this.user?.phone || '', [Validators.pattern('^[0-9]+$')]],
       status: [this.user?.status || 'PENDING', Validators.required]
     });
   }
 
   onSubmit(): void {
     if (this.userForm.invalid || !this.user) return;
-    
+
     this.isSubmitting = true;
-    this.usersService.updateUser(this.user.id_user, this.userForm.value).subscribe({
+    this.usersService.update(this.user.id, this.userForm.value).subscribe({
       next: () => {
         this.isSubmitting = false;
         this.close.emit(true);

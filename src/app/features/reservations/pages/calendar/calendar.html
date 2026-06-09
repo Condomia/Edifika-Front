@@ -1,0 +1,64 @@
+<div class="calendar-card">
+  <div class="calendar-header">
+    <div>
+      <h2>Reservations Calendar</h2>
+      <p>{{ viewDate | calendarDate:(view + 'ViewTitle'):'en' }}</p>
+    </div>
+
+    <div class="calendar-actions">
+      <button
+        mwlCalendarPreviousView
+        [view]="view"
+        [(viewDate)]="viewDate">
+
+      </button>
+
+      <button
+        mwlCalendarToday
+        [(viewDate)]="viewDate">
+        <p>{{ viewDate | date:'MMMM' }}</p>
+      </button>
+
+      <button
+        mwlCalendarNextView
+        [view]="view"
+        [(viewDate)]="viewDate">
+        ›
+      </button>
+    </div>
+  </div>
+
+  <ng-template #customCellTemplate let-day="day">
+    <div class="custom-day-cell">
+      <div class="day-number">
+        {{ day.date | date:'d' }}
+      </div>
+
+      <div class="custom-events">
+        @for (event of day.events; track event.title) {
+          <div
+            class="custom-event"
+            [style.background]="event.color?.primary"
+            (click)="$event.stopPropagation(); handleEvent('Clicked', event)">
+            {{ event.title }}
+          </div>
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  <mwl-calendar-month-view
+    [viewDate]="viewDate"
+    [events]="events"
+    [refresh]="refresh"
+    [activeDayIsOpen]="false"
+    [cellTemplate]="customCellTemplate"
+    (dayClicked)="dayClicked($event.day)">
+  </mwl-calendar-month-view>
+
+  <div class="calendar-legend">
+    <span><i class="active"></i> ACTIVE</span>
+    <span><i class="cancelled"></i> CANCELLED</span>
+    <span><i class="maintenance"></i> MAINTENANCE</span>
+  </div>
+</div>

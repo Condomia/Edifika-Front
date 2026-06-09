@@ -1,9 +1,12 @@
+import { Role } from './user-rol.model';
 export interface User {
-  id_user: number;
-  id_rol: number;
-  user: string;
-  password_hash: string;
+  id: number;
+  fullName: string;
   email: string;
+  passwordHash: string;
+  phone: string;
   status: string;
-  telefono: string;
+  documentType: string;
+  documentNumber: string;
+  roles: Role[];
 }

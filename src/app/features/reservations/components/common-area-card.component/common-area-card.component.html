@@ -1,0 +1,36 @@
+<div class="common-area-card">
+  <div class="card-header">
+    <div class="icon-box">
+      <span class="material-icons">{{ areaIcon }}</span>
+    </div>
+
+    <div class="card-content">
+      <h3>{{ commonArea.name }}</h3>
+
+      <p class="type">
+        {{ commonArea.type }}
+      </p>
+
+      <p>
+        Capacidad: {{ commonArea.maxCapacity }} personas
+      </p>
+
+      <span class="status">
+      {{ areaStatus }}
+    </span>
+    </div>
+    <div class="card-btn-container">
+      <label class="switch">
+        <input
+          type="checkbox"
+          [checked]="commonArea.status === 'AVAILABLE'">
+        <span class="slider"></span>
+      </label>
+    </div>
+  </div>
+
+
+  <div class="card-actions">
+    <button class="btn-primary">Editar Reglas</button>
+  </div>
+</div>
