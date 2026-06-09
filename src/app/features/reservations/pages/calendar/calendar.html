@@ -1,0 +1,151 @@
+<div class="calendar-card">
+  <div class="calendar-header">
+    <div>
+      <h2>Reservations Calendar</h2>
+      <p>{{ viewDate | calendarDate:(view + 'ViewTitle'):'en' }}</p>
+    </div>
+
+    <div class="calendar-actions">
+      <button
+        mwlCalendarPreviousView
+        [view]="view"
+        [(viewDate)]="viewDate">
+        ‹
+      </button>
+
+      <button
+        mwlCalendarToday
+        [(viewDate)]="viewDate">
+        {{ viewDate | date:'MMMM' }}
+      </button>
+
+      <button
+        mwlCalendarNextView
+        [view]="view"
+        [(viewDate)]="viewDate">
+        ›
+      </button>
+
+      <button class="add-reservation-btn" (click)="openCreateReservationModal()">
+        Add Reservation
+      </button>
+    </div>
+  </div>
+
+  <ng-template #customCellTemplate let-day="day">
+    <div class="custom-day-cell">
+      <div class="day-number">
+        {{ day.date | date:'d' }}
+      </div>
+
+      <div class="custom-events">
+        @for (event of day.events; track event.title) {
+          <div
+            class="custom-event"
+            [style.background]="event.color?.primary"
+            (click)="$event.stopPropagation(); openReservationDetail(event)">
+            {{ event.title }}
+          </div>
+        }
+      </div>
+    </div>
+  </ng-template>
+
+  <mwl-calendar-month-view
+    [viewDate]="viewDate"
+    [events]="events"
+    [refresh]="refresh"
+    [activeDayIsOpen]="false"
+    [cellTemplate]="customCellTemplate"
+    (dayClicked)="dayClicked($event.day)">
+  </mwl-calendar-month-view>
+
+  <div class="calendar-legend">
+    <span><i class="active"></i> ACTIVE</span>
+    <span><i class="cancelled"></i> CANCELLED</span>
+    <span><i class="maintenance"></i> MAINTENANCE</span>
+  </div>
+</div>
+<div class="modal-backdrop" *ngIf="showCreateReservationModal">
+  <div class="modal-card">
+    <div class="modal-header">
+      <h2>Create Reservation</h2>
+      <button class="close-button" (click)="closeCreateReservationModal()">×</button>
+    </div>
+
+    <form (ngSubmit)="createReservation()">
+      <label>Resident</label>
+      <select [(ngModel)]="reservationForm.residentId" name="residentId" required>
+        <option value="" disabled selected>Select resident</option>
+
+        <option *ngFor="let user of users" [value]="user.id">
+          {{ user.fullName }}
+        </option>
+      </select>
+
+      <label>Common Area</label>
+      <select [(ngModel)]="reservationForm.commonAreaId" name="commonAreaId" required>
+        <option *ngFor="let area of commonAreas" [value]="area.id">
+          {{ area.name }}
+        </option>
+      </select>
+
+      <label>Reservation Date</label>
+      <input
+        type="date"
+        [min]="todayDate"
+        [(ngModel)]="reservationForm.reservationDate"
+        name="reservationDate"
+        required>
+
+      <label>Time Slot</label>
+      <input
+        type="number"
+        min="0"
+        max="23"
+        step="1"
+        [(ngModel)]="reservationForm.timeSlot"
+        name="timeSlot"
+        required>
+
+      <label>Number of Guests</label>
+      <input
+        type="number"
+        min="1"
+        [max]="selectedAreaCapacity"
+        step="1"
+        [(ngModel)]="reservationForm.numberOfGuests"
+        name="numberOfGuests"
+        required>
+
+      <p class="form-error" *ngIf="reservationError">
+        {{ reservationError }}
+      </p>
+
+      <div class="modal-actions">
+        <button type="button" class="cancel-button" (click)="closeCreateReservationModal()">
+          Cancel
+        </button>
+
+        <button type="submit" class="save-button">
+          Create Reservation
+        </button>
+      </div>
+    </form>
+  </div>
+</div>
+<div class="modal-backdrop" *ngIf="showDayReservationsModal">
+  <app-reservation-list
+    [reservations]="selectedDayReservations"
+    (selectReservation)="openReservationDetail($event)"
+    (close)="closeDayReservationsModal()">
+  </app-reservation-list>
+</div>
+
+<div class="modal-backdrop" *ngIf="showReservationDetailModal">
+  <app-reservation-detail
+    [reservationDetail]="selectedReservationDetail"
+    (close)="closeReservationDetailModal()"
+    (cancelReservation)="cancelReservation($event)">
+  </app-reservation-detail>
+</div>

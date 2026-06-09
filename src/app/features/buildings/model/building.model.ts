@@ -1,7 +1,8 @@
 export interface Building {
-  id_building: number;
+  id: number;
+  idBuilding: number;
   name: string;
-  addres: string;
+  address: string;
   district: string;
   city: string;
 }

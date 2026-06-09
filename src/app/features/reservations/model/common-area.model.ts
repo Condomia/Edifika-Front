@@ -16,7 +16,7 @@ export type CommonAreaType =
   | 'MULTIPURPOSE_ROOM';
 
 export interface CommonArea {
-  id: number;
+  id: number | string;
   name: string;
   type: CommonAreaType;
   status: 'AVAILABLE' | 'MAINTENANCE';

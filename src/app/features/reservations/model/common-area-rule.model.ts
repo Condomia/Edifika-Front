@@ -1,5 +1,5 @@
 export interface CommonAreaRule {
-  id: number;
+  id: number | string;
   commonAreaId: number;
   maxReservationHours: number;
   requiresPayment: boolean;

@@ -1,7 +1,7 @@
 export interface Reservation {
-  id: number;
+  id?: number | string;
   residentId: number;
-  commonAreaId: number;
+  commonAreaId: number | string;
   reservationDate: string;
   timeSlot: number;
   numberOfGuests: number;

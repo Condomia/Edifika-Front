@@ -1,0 +1,106 @@
+<div class="units-page">
+  <header class="page-header">
+    <div>
+      <h1>Units & Residents</h1>
+      <p>Manage property inventory and resident information across all towers.</p>
+    </div>
+
+    <div class="header-actions">
+      <button class="btn secondary">Export CSV</button>
+      <button
+        class="btn primary"
+        (click)="createUnit()">
+        Add New Unit
+      </button>    </div>
+  </header>
+
+  <section class="summary-grid">
+    <article class="summary-card">
+      <span>Total Units</span>
+      <strong>{{ totalUnits }}</strong>
+      <small>Across all towers</small>
+    </article>
+
+    <article class="summary-card">
+      <span>Outstanding Debt</span>
+      <strong class="danger">{{ outstandingDebt }}</strong>
+      <small>Units with pending debt</small>
+    </article>
+
+    <article class="summary-card">
+      <span>New Move-ins</span>
+      <strong>{{ newMoveIns }}</strong>
+      <small>Pending verification</small>
+    </article>
+
+    <article class="summary-card">
+      <span>Maintenance</span>
+      <strong>{{ maintenanceRequests }}</strong>
+      <small>Active requests</small>
+    </article>
+  </section>
+
+  <section class="table-card">
+    <table>
+      <thead>
+      <tr>
+        <th>Unit & Tower</th>
+        <th>Primary Resident</th>
+        <th>Status</th>
+        <th>Debt</th>
+        <th>Contact</th>
+        <th>Actions</th>
+      </tr>
+      </thead>
+
+      <tbody>
+      <tr *ngFor="let row of rows">
+        <td>
+          <strong>Unit {{ row.unitNumber }}</strong>
+          <small>{{ row.tower }}</small>
+        </td>
+
+        <td>
+          <div class="resident-info">
+            <div class="avatar">
+              {{ row.residentName.charAt(0) }}
+            </div>
+
+            <div>
+              <strong>{{ row.residentName }}</strong>
+              <small>{{ row.residentRole }}</small>
+            </div>
+          </div>
+        </td>
+
+        <td>
+            <span class="badge" [ngClass]="row.unitStatus.toLowerCase()">
+              {{ row.unitStatus }}
+            </span>
+        </td>
+
+        <td>
+            <span class="badge" [ngClass]="row.debtStatus.toLowerCase()">
+              {{ row.debtLabel }}
+            </span>
+        </td>
+
+        <td>
+          <span>{{ row.email }}</span>
+          <small>{{ row.phone }}</small>
+        </td>
+
+        <td>
+          <button class="edit-btn" (click)="editRow(row)">Edit</button>
+        </td>
+      </tr>
+      </tbody>
+    </table>
+  </section>
+</div>
+<app-unit-form
+  *ngIf="(isEditingUnit || isCreatingUnit) && selectedUnit"
+  [unit]="selectedUnit"
+  [isCreateMode]="isCreatingUnit"
+  (close)="onUnitFormClose($event)">
+</app-unit-form>

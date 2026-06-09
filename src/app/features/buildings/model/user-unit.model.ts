@@ -1,8 +1,9 @@
 export interface UserUnit {
-  id_user_unit: number;
-  id_unit: number;
-  id_user: number;
-  start_date: string;
-  end_date: string;
+  id: number;
+  idUserUnit: number;
+  unitId: number;
+  idUser: number;
+  startDate: string;
+  endDate: string | null;
   status: string;
 }

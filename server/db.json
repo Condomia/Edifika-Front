@@ -1,7 +1,7 @@
 {
   "users": [
     {
-      "id": 1,
+      "id": "1",
       "fullName": "Admin Edifika",
       "email": "admin@edifika.com",
       "passwordHash": "$2a$10$examplehashadmin",
@@ -12,12 +12,12 @@
       "roles": [
         {
           "id": 1,
-          "name": "ROLE_ADMIN"
+          "name": "ADMIN"
         }
       ]
     },
     {
-      "id": 2,
+      "id": "2",
       "fullName": "Residente Demo",
       "email": "resident@edifika.com",
       "passwordHash": "$2a$10$examplehashresident",
@@ -27,56 +27,52 @@
       "documentNumber": "87654321",
       "roles": [
         {
-          "id": 2,
-          "name": "ROLE_RESIDENT"
+          "id": 3,
+          "name": "TENANT"
         }
       ]
     },
     {
-      "id": 3,
-      "fullName": "Administrador Condominio",
-      "email": "manager@edifika.com",
-      "passwordHash": "$2a$10$examplehashmanager",
+      "id": "3",
+      "fullName": "Propietario Demo",
+      "email": "owner@edifika.com",
+      "passwordHash": "$2a$10$examplehashowner",
       "phone": "977777777",
       "status": "ACTIVE",
       "documentType": "CE",
       "documentNumber": "A1234567",
       "roles": [
         {
-          "id": 3,
-          "name": "ROLE_MANAGER"
+          "id": 2,
+          "name": "OWNER"
         }
       ]
     }
   ],
   "roles": [
     {
-      "id": 1,
-      "name": "ROLE_ADMIN"
+      "id": "1",
+      "name": "ADMIN"
     },
     {
-      "id": 2,
-      "name": "ROLE_RESIDENT"
+      "id": "2",
+      "name": "OWNER"
     },
     {
-      "id": 3,
-      "name": "ROLE_MANAGER"
-    },
-    {
-      "id": 4,
-      "name": "ROLE_WORKER"
+      "id": "3",
+      "name": "TENANT"
     }
   ],
   "authentication": [
     {
-      "id": 1,
+      "id": "1",
       "email": "admin@edifika.com",
       "password": "admin123",
       "token": "fake-jwt-token-admin",
       "userId": 1
     },
     {
-      "id": 2,
+      "id": "2",
       "email": "resident@edifika.com",
       "password": "resident123",
       "token": "fake-jwt-token-resident",
@@ -85,7 +81,7 @@
   ],
   "buildings": [
     {
-      "id": 1,
+      "id": "1",
       "idBuilding": 1,
       "name": "Edificio Los Olivos",
       "address": "Av. Principal 123",
@@ -93,7 +89,7 @@
       "city": "Lima"
     },
     {
-      "id": 2,
+      "id": "2",
       "idBuilding": 2,
       "name": "Condominio San Gabriel",
       "address": "Calle Las Flores 456",
@@ -103,45 +99,45 @@
   ],
   "units": [
     {
-      "id": 1,
+      "id": "1",
       "idUnit": 1,
       "buildingId": 1,
       "unitNumber": 101,
       "floor": 1,
       "coveredArea": 85.5,
-      "totalArea": 92.0,
+      "totalArea": 90,
       "participationPercentage": 4.5,
       "distributionPercentage": 4.8,
       "status": "AVAILABLE"
     },
     {
-      "id": 2,
+      "id": "2",
       "idUnit": 2,
       "buildingId": 1,
       "unitNumber": 102,
       "floor": 1,
-      "coveredArea": 78.0,
+      "coveredArea": 78,
       "totalArea": 84.3,
       "participationPercentage": 4.1,
       "distributionPercentage": 4.3,
       "status": "OCCUPIED"
     },
     {
-      "id": 3,
+      "id": "3",
       "idUnit": 3,
       "buildingId": 2,
       "unitNumber": 201,
       "floor": 2,
-      "coveredArea": 90.0,
+      "coveredArea": 90,
       "totalArea": 98.5,
-      "participationPercentage": 5.0,
+      "participationPercentage": 5,
       "distributionPercentage": 5.2,
       "status": "OCCUPIED"
     }
   ],
   "userUnits": [
     {
-      "id": 1,
+      "id": "1",
       "idUserUnit": 1,
       "unitId": 2,
       "idUser": 2,
@@ -150,7 +146,7 @@
       "status": "ACTIVE"
     },
     {
-      "id": 2,
+      "id": "2",
       "idUserUnit": 2,
       "unitId": 3,
       "idUser": 3,
@@ -161,15 +157,15 @@
   ],
   "commonAreas": [
     {
-      "id": 1,
-      "name": "Piscina principal",
+      "id": "1",
+      "name": "Piscina principal Mayor",
       "type": "POOL",
       "status": "AVAILABLE",
       "maxCapacity": 10,
       "bookingType": "SHARED"
     },
     {
-      "id": 2,
+      "id": "2",
       "name": "Gimnasio",
       "type": "GYM",
       "status": "AVAILABLE",
@@ -177,19 +173,50 @@
       "bookingType": "SHARED"
     },
     {
-      "id": 3,
+      "id": "3",
       "name": "Sala de coworking",
       "type": "COWORKING_ROOM",
       "status": "AVAILABLE",
       "maxCapacity": 8,
       "bookingType": "SHARED"
+    },
+    {
+      "id": "4",
+      "name": "Parrila",
+      "type": "BBQ_AREA",
+      "status": "AVAILABLE",
+      "maxCapacity": 8,
+      "bookingType": "SHARED"
+    },
+    {
+      "id": "5",
+      "name": "Terraza",
+      "type": "TERRACE",
+      "status": "AVAILABLE",
+      "maxCapacity": 8,
+      "bookingType": "SHARED"
+    },
+    {
+      "id": "6",
+      "name": "Terraza",
+      "type": "POOL",
+      "status": "AVAILABLE",
+      "maxCapacity": 15,
+      "bookingType": "SHARED"
+    },
+    {
+      "name": "Area Prueba",
+      "type": "MEETING_ROOM",
+      "status": "AVAILABLE",
+      "maxCapacity": 12,
+      "bookingType": "SHARED",
+      "id": "7"
     }
   ],
-
   "commonAreaRules": [
     {
-      "id": 1,
-      "commonAreaId": 1,
+      "id": "1",
+      "commonAreaId": "1",
       "maxReservationHours": 2,
       "requiresPayment": false,
       "price": 0,
@@ -201,7 +228,7 @@
       "requiresApproval": false
     },
     {
-      "id": 2,
+      "id": "2",
       "commonAreaId": 2,
       "maxReservationHours": 1,
       "requiresPayment": false,
@@ -214,7 +241,7 @@
       "requiresApproval": false
     },
     {
-      "id": 3,
+      "id": "3",
       "commonAreaId": 3,
       "maxReservationHours": 3,
       "requiresPayment": true,
@@ -225,12 +252,37 @@
       "penaltyHoursBefore": 24,
       "penaltyAmount": 15,
       "requiresApproval": true
+    },
+    {
+      "id": "4",
+      "commonAreaId": 4,
+      "maxReservationHours": 10,
+      "requiresPayment": true,
+      "price": 20,
+      "requiresGuarantee": true,
+      "guaranteeAmount": 50,
+      "allowCancellation": true,
+      "penaltyHoursBefore": 24,
+      "penaltyAmount": 100,
+      "requiresApproval": false
+    },
+    {
+      "commonAreaId": 5,
+      "maxReservationHours": 1,
+      "requiresPayment": true,
+      "price": 10,
+      "requiresGuarantee": false,
+      "guaranteeAmount": 0,
+      "allowCancellation": true,
+      "penaltyHoursBefore": 24,
+      "penaltyAmount": 100,
+      "requiresApproval": false,
+      "id": "5"
     }
   ],
-
   "reservations": [
     {
-      "id": 1,
+      "id": "1",
       "residentId": 1,
       "commonAreaId": 1,
       "reservationDate": "2026-06-08",
@@ -241,7 +293,7 @@
       "penaltyApplied": false
     },
     {
-      "id": 2,
+      "id": "2",
       "residentId": 2,
       "commonAreaId": 2,
       "reservationDate": "2026-06-09",
@@ -252,7 +304,7 @@
       "penaltyApplied": false
     },
     {
-      "id": 3,
+      "id": "3",
       "residentId": 1,
       "commonAreaId": 1,
       "reservationDate": "2026-06-10",
@@ -261,6 +313,75 @@
       "status": "CANCELLED",
       "qrCodeAccess": "4c8a9f70-3333-5555-7777-ghi123987654",
       "penaltyApplied": true
+    },
+    {
+      "residentId": 1,
+      "commonAreaId": 1,
+      "reservationDate": "2026-03-04",
+      "timeSlot": 15,
+      "numberOfGuests": 15,
+      "status": "ACTIVE",
+      "qrCodeAccess": "54c3fa20-9f23-483b-a129-c377f0cd55bf",
+      "penaltyApplied": false,
+      "id": "ythkbstJ7TQ"
+    },
+    {
+      "residentId": 0,
+      "commonAreaId": "3",
+      "reservationDate": "2026-06-20",
+      "timeSlot": 9,
+      "numberOfGuests": 1,
+      "status": "CANCELLED",
+      "qrCodeAccess": "6e4eea2c-a69f-4a26-945d-54a7285313af",
+      "penaltyApplied": false,
+      "id": "5jVe0NHL7pU"
+    },
+    {
+      "residentId": 2,
+      "commonAreaId": "5",
+      "reservationDate": "2026-06-20",
+      "timeSlot": 9,
+      "numberOfGuests": 7,
+      "status": "ACTIVE",
+      "qrCodeAccess": "913d0dbb-ea47-4ace-b284-e40db4bc15b8",
+      "penaltyApplied": false,
+      "id": "Lg0Gz3tfpKA"
+    },
+    {
+      "residentId": 2,
+      "commonAreaId": "3",
+      "reservationDate": "2026-06-20",
+      "timeSlot": 12,
+      "numberOfGuests": 1,
+      "status": "ACTIVE",
+      "qrCodeAccess": "230e0d3c-8332-400d-89f4-d207b7694175",
+      "penaltyApplied": false,
+      "id": "k7qTLOnpQxs"
     }
-  ]
+  ],"debts": [
+  {
+    "id": 1,
+    "idDebt": 1,
+    "unitId": 2,
+    "description": "Maintenance fee October",
+    "date": "2026-06-01T00:00:00",
+    "amount": 850,
+    "status": "PENDING",
+    "createdAt": "2026-06-01T00:00:00"
+  }
+],
+  "payments": [
+    {
+      "id": 1,
+      "idPayment": 1,
+      "idDebt": 1,
+      "idUser": 2,
+      "amount": 500,
+      "paymentDate": "2026-06-10T00:00:00",
+      "paymentMethod": "YAPE",
+      "pdfLink": "",
+      "status": "PAID"
+    }
+  ],
+  "$schema": "./node_modules/json-server/schema.json"
 }

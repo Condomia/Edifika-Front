@@ -1,0 +1,32 @@
+import {Component, EventEmitter, OnInit, Output} from '@angular/core';
+import { CommonAreaCardComponent } from '../common-area-card.component/common-area-card.component';
+import { CommonAreaService } from '../../services/common-area.service';
+import { CommonArea } from '../../model/common-area.model';
+import {NgForOf} from '@angular/common';
+
+@Component({
+  selector: 'app-common-area-list',
+  standalone: true,
+  imports: [CommonAreaCardComponent, NgForOf],
+  templateUrl: './common-area-list.component.html',
+  styleUrl: './common-area-list.component.css',
+})
+export class CommonAreaListComponent implements OnInit {
+  commonAreas: CommonArea[] = [];
+  @Output() editRules = new EventEmitter<CommonArea>();
+  @Output() statusChanged = new EventEmitter<CommonArea>();
+
+  constructor(private commonAreaService: CommonAreaService) {}
+
+  ngOnInit(): void {
+    this.commonAreaService.getAll().subscribe((areas) => {
+      this.commonAreas = areas;
+    });
+  }
+  onEditRules(area: CommonArea) {
+    this.editRules.emit(area);
+  }
+  onStatusChanged(area: CommonArea) {
+    this.statusChanged.emit(area);
+  }
+}

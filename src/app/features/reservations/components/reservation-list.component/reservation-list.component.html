@@ -1,0 +1,22 @@
+<div class="modal-card">
+  <div class="modal-header">
+    <h2>Reservations of the Day</h2>
+    <button class="close-button" (click)="close.emit()">×</button>
+  </div>
+
+  <div class="reservation-list">
+    <button
+      class="reservation-list-item"
+      *ngFor="let event of reservations"
+      (click)="selectReservation.emit(event)">
+
+      <strong>{{ event.meta.area?.name }}</strong>
+      <span>{{ event.meta.user?.fullName }}</span>
+      <small>
+        {{ formatHour(event.meta.reservation.timeSlot) }}
+        -
+        {{ formatHour(event.meta.reservation.timeSlot + 1) }}
+      </small>
+    </button>
+  </div>
+</div>

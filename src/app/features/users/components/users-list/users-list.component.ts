@@ -23,17 +23,17 @@ export class UsersListComponent implements OnInit {
   }
 
   loadUsers(): void {
-    this.usersService.getUsers().subscribe({
+    this.usersService.getAll().subscribe({
       next: (data) => this.users = data,
       error: (err) => console.error('Error fetching users:', err)
     });
   }
 
   verifyUser(id: number): void {
-    this.usersService.verifyUser(id).subscribe({
+    this.usersService.getById(id).subscribe({
       next: () => {
         // Optimistic update
-        const user = this.users.find(u => u.id_user === id);
+        const user = this.users.find(u => u.id === id);
         if (user) {
           user.status = 'VERIFIED';
         }

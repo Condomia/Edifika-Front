@@ -1,7 +1,12 @@
 export interface Unit {
-  id_unit: number;
-  id_building: number;
-  unit_number: number;
+  id: number;
+  idUnit: number;
+  buildingId: number;
+  unitNumber: number;
   floor: number;
+  coveredArea: number;
+  totalArea: number;
+  participationPercentage: number;
+  distributionPercentage: number;
   status: string;
 }

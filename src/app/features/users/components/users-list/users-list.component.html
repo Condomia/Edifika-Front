@@ -20,15 +20,15 @@
       </thead>
       <tbody>
         <tr *ngFor="let user of users">
-          <td>{{ user.id_user }}</td>
+          <td>{{ user.id }}</td>
           <td>
             <div class="user-info">
-              <div class="avatar">{{ user.user.charAt(0).toUpperCase() }}</div>
-              <span>{{ user.user }}</span>
+              <div class="avatar">{{ user.fullName.charAt(0).toUpperCase() }}</div>
+              <span>{{ user.fullName }}</span>
             </div>
           </td>
           <td>{{ user.email }}</td>
-          <td>{{ user.telefono }}</td>
+          <td>{{ user.phone }}</td>
           <td>
             <span class="status-badge" [ngClass]="user.status?.toLowerCase() || 'pending'">
               {{ user.status || 'PENDING' }}
@@ -36,7 +36,7 @@
           </td>
           <td>
             <div class="actions">
-              <button class="btn-icon verify-btn" (click)="verifyUser(user.id_user)" title="Verificar">
+              <button class="btn-icon verify-btn" (click)="verifyUser(user.id)" title="Verificar">
                 <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
               </button>
               <button class="btn-icon edit-btn" (click)="editUser(user)" title="Editar">

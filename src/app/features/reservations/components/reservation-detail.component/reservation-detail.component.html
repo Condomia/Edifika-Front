@@ -1,0 +1,49 @@
+<div class="detail-card" *ngIf="reservationDetail">
+  <div class="modal-header">
+    <h2>Detalles de Reservación</h2>
+    <button class="close-button" (click)="close.emit()">×</button>
+  </div>
+
+  <div class="detail-body">
+    <span class="status-pill">
+      {{ reservationDetail.reservation.status }}
+    </span>
+
+    <div class="detail-grid">
+      <div>
+        <small>RESIDENTE</small>
+        <strong>{{ reservationDetail.user?.fullName }}</strong>
+      </div>
+
+      <div>
+        <small>ÁREA COMÚN</small>
+        <strong>{{ reservationDetail.area?.name }}</strong>
+      </div>
+
+      <div>
+        <small>HORARIO</small>
+        <strong>
+          {{ formatHour(reservationDetail.reservation.timeSlot) }}
+          -
+          {{ formatHour(reservationDetail.reservation.timeSlot + 1) }}
+        </strong>
+      </div>
+
+      <div>
+        <small>AFORO / PERSONAS</small>
+        <strong>{{ reservationDetail.reservation.numberOfGuests }} personas</strong>
+      </div>
+    </div>
+  </div>
+
+  <div class="detail-actions">
+    <button
+      class="cancel-reservation-button"
+      (click)="cancelReservation.emit(reservationDetail)">
+      Cancelar Reservación
+    </button>
+    <button class="save-button" (click)="close.emit()">
+      Cerrar
+    </button>
+  </div>
+</div>

@@ -1,0 +1,79 @@
+<div class="modal-backdrop" (click)="onCancel()">
+  <div class="modal-container" (click)="$event.stopPropagation()">
+    <header class="modal-header">
+      <div>
+        <h2>{{ isCreateMode ? 'Create Unit' : 'Edit Unit' }}</h2>
+        <p>Update unit information and resident assignment.</p>
+      </div>
+
+      <button class="close-btn" type="button" (click)="onCancel()">×</button>
+    </header>
+
+    <form [formGroup]="unitForm" (ngSubmit)="onSubmit()" class="form-body">
+      <div class="form-grid">
+        <div class="form-group">
+          <label>Unit Number</label>
+          <input type="number" formControlName="unitNumber">
+        </div>
+
+        <div class="form-group">
+          <label>Floor</label>
+          <input type="number" formControlName="floor">
+        </div>
+
+        <div class="form-group">
+          <label>Covered Area</label>
+          <input type="number" formControlName="coveredArea">
+        </div>
+
+        <div class="form-group">
+          <label>Total Area</label>
+          <input type="number" formControlName="totalArea">
+        </div>
+
+        <div class="form-group">
+          <label>Participation %</label>
+          <input type="number" formControlName="participationPercentage">
+        </div>
+
+        <div class="form-group">
+          <label>Distribution %</label>
+          <input type="number" formControlName="distributionPercentage">
+        </div>
+
+        <div class="form-group">
+          <label>Status</label>
+          <select formControlName="status">
+            <option value="AVAILABLE">AVAILABLE</option>
+            <option value="OCCUPIED">OCCUPIED</option>
+            <option value="MAINTENANCE">MAINTENANCE</option>
+          </select>
+        </div>
+
+        <div class="form-group">
+          <label>Resident</label>
+          <select formControlName="idUser">
+            <option value="">No Resident</option>
+            <option *ngFor="let user of users" [value]="user.id">
+              {{ user.fullName }} - {{ user.roles[0]?.name }}
+            </option>
+          </select>
+        </div>
+      </div>
+
+      <p class="error-text" *ngIf="unitForm.invalid && unitForm.touched">
+        All numeric values must be greater than or equal to 0.
+      </p>
+
+      <footer class="form-actions">
+        <button type="button" class="btn secondary" (click)="onCancel()">
+          Cancel
+        </button>
+
+        <button type="submit" class="btn primary" [disabled]="isSubmitting">
+          {{ isSubmitting ? 'Saving...' : (isCreateMode ? 'Create Unit' : 'Save Changes') }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>
