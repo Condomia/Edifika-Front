@@ -12,7 +12,7 @@ export const routes: Routes = [
     component: Layout,
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', loadComponent: () => import('./core/dashboard/dashboard').then(m => m.Dashboard) },
+      { path: 'dashboard', loadComponent: () => import('./features/dashboard/pages/dashboard/dashboard').then(m => m.Dashboard) },
       { path: 'units', loadComponent: () => import('./core/units/units').then(m => m.Units) },
       { path: 'common-areas', loadComponent: () => import('./core/common-areas/common-areas').then(m => m.CommonAreas) },
       { path: 'finance', loadComponent: () => import('./core/finance/finance').then(m => m.Finance) },
