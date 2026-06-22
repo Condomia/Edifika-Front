@@ -1,3 +1,79 @@
-<div class="page-container">
-  <h1>Bienvenido a Settings</h1>
+<div class="settings-container">
+  <div class="settings-header">
+    <h1>Settings</h1>
+    <p>Manage your account and property preferences.</p>
+  </div>
+
+  <div class="settings-content">
+    <div class="settings-sidebar">
+      <div class="context-card">
+        <div class="context-label">CURRENT CONTEXT</div>
+        <div class="context-title">Torre A - Edifika</div>
+        <ul class="context-nav">
+          <li class="active">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+            User Profile
+          </li>
+          <li>
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><rect x="4" y="2" width="16" height="20" rx="2" ry="2"></rect><path d="M9 22v-4h6v4"></path><path d="M8 6h.01"></path><path d="M16 6h.01"></path><path d="M12 6h.01"></path><path d="M12 10h.01"></path><path d="M12 14h.01"></path><path d="M16 10h.01"></path><path d="M16 14h.01"></path><path d="M8 10h.01"></path><path d="M8 14h.01"></path></svg>
+            Property Info
+          </li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="settings-main">
+      <div class="card">
+        <div class="card-header">
+          <h2>User Profile</h2>
+          <a href="javascript:void(0)" class="edit-link">Edit Details</a>
+        </div>
+        <div class="user-profile-content">
+          <div class="avatar-container">
+            <img src="https://i.pravatar.cc/150?img=47" alt="Elena Vance" class="avatar" />
+            <div class="camera-badge">
+              <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
+            </div>
+          </div>
+          <div class="user-details">
+            <div class="detail-group">
+              <label>User</label>
+              <div class="detail-value">Elena Vance</div>
+            </div>
+            <div class="detail-group">
+              <label>Email Address</label>
+              <div class="detail-value">elena.vance@edifika.com</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <div class="card">
+        <div class="card-header">
+          <h2>Property Information</h2>
+        </div>
+        <div class="property-form">
+          <div class="form-group full-width">
+            <label>Legal Name</label>
+            <input type="text" value="Torre A - Edifika" readonly />
+          </div>
+          <div class="form-row">
+            <div class="form-group half-width">
+              <label>Tax ID / Registro</label>
+              <input type="text" value="TX-990-2341-B" readonly />
+            </div>
+            <div class="form-group half-width">
+              <label>Contact Phone</label>
+              <input type="text" value="+1 (555) 012-3456" readonly />
+            </div>
+          </div>
+          <div class="form-group full-width">
+            <label>Physical Address</label>
+            <input type="text" value="1200 Architecture Way, Suite 400, Urban District, Metropolis 90210" readonly />
+          </div>
+          <button class="btn-save">Save Changes</button>
+        </div>
+      </div>
+    </div>
+  </div>
 </div>
