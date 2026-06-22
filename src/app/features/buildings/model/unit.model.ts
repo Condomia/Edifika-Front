@@ -1,7 +1,7 @@
 export interface Unit {
-  id: number;
+  id?: number;
   idUnit: number;
-  buildingId: number;
+  idBuilding: number;
   unitNumber: number;
   floor: number;
   coveredArea: number;

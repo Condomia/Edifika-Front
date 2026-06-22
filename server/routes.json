@@ -1,0 +1,49 @@
+{
+  "/authentication/sign-in": "/authentication",
+  "/authentication/sign-up": "/users",
+
+  "/users": "/users",
+  "/users/:id": "/users/:id",
+
+  "/roles": "/roles",
+  "/roles/:id": "/roles/:id",
+
+  "/residential/buildings": "/buildings",
+  "/residential/buildings/:id": "/buildings/:id",
+
+  "/residential/units": "/units",
+  "/residential/units/:id": "/units/:id",
+
+  "/residential/user-units": "/userUnits",
+  "/residential/user-units/:id": "/userUnits/:id",
+  "/residential/user-units/move": "/userUnits",
+
+  "/residential/buildings/:idBuilding/units": "/units?buildingId=:idBuilding",
+  "/residential/buildings/:idBuilding/residents": "/userUnits?buildingId=:idBuilding",
+
+  "/common-areas": "/commonAreas",
+  "/common-areas/:id": "/commonAreas/:id",
+
+  "/common-area-rules": "/commonAreaRules",
+  "/common-area-rules/:id": "/commonAreaRules/:id",
+  "/common-area-rules/common-area/:commonAreaId": "/commonAreaRules?commonAreaId=:commonAreaId",
+
+  "/reservations": "/reservations",
+  "/reservations/:id": "/reservations/:id",
+  "/reservations/:reservationId/cancelations": "/reservations/:reservationId",
+  "/reservations/availability": "/reservations",
+
+  "/payments": "/payments",
+  "/payments/:id": "/payments/:id",
+  "/payments/:paymentId/confirm": "/payments/:paymentId",
+
+  "/payments/debts": "/debts",
+  "/payments/debts/:id": "/debts/:id",
+  "/payments/debts/unit/:unitId": "/debts?unitId=:unitId",
+
+  "/payments/user/:userId": "/payments?idUser=:userId",
+  "/payments/user/:userId/year/:year": "/payments?idUser=:userId&paymentDate_like=:year",
+
+  "/posts": "/posts",
+  "/posts/:id": "/posts/:id"
+}

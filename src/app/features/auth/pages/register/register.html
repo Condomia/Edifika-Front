@@ -1,50 +1,83 @@
 <div class="register-container">
   <div class="left">
-    <h1>Elevating Residential
-      Living</h1>
+    <h1>Elevating Residential<br>Living</h1>
   </div>
+
   <div class="right">
     <div class="register-form">
       <div class="logo">
         <span class="material-icons">corporate_fare</span>
         <span>Edifika</span>
       </div>
-      <div class="welcome-message">
-        <h1>Create Account</h1>
-        <p>Manage your property ecosystem with ease.</p>
-      </div>
-      <form class="register-fields">
-        <label>EMAIL ADDRESS</label>
-        <div class="input-row">
-          <span class="material-icons-outlined">mail</span>
-          <input type="email" value="admin@edifika.com">
-        </div>
 
-        <label>USER</label>
+      <div class="welcome-message">
+        <h1>Create Admin Account</h1>
+        <p>Register a new administrator account to access Edifika.</p>
+      </div>
+
+      <form class="register-fields" [formGroup]="registerForm" (ngSubmit)="register()">
+        <label>FULL NAME</label>
         <div class="input-row">
           <span class="material-icons-outlined">person</span>
-          <input type="text" value="user">
+          <input type="text" formControlName="fullName" placeholder="Admin Edifika">
         </div>
 
-        <label>CELLPHONE</label>
+        <label>EMAIL</label>
         <div class="input-row">
-          <span class="material-icons-outlined">call</span>
-          <input type="text" value= "999999999" maxlength="9">
+          <span class="material-icons-outlined">mail</span>
+          <input type="email" formControlName="email" placeholder="admin@edifika.com">
         </div>
-
-
 
         <label>PASSWORD</label>
         <div class="input-row">
           <span class="material-icons-outlined">lock</span>
-          <input type="password" value="123456">
-          <span class="material-icons">visibility</span>
+          <input type="password" formControlName="password" placeholder="********">
         </div>
 
-        <button type="submit" class="register-button">Register New Account</button>
-        <button type="button" class="login-button" (click)="goToLogin()">Login to Dashboard</button>
-      </form>
+        <label>PHONE</label>
+        <div class="input-row">
+          <span class="material-icons-outlined">phone</span>
+          <input type="text" formControlName="phone" placeholder="999999999">
+        </div>
 
+        <label>DOCUMENT TYPE</label>
+        <div class="input-row">
+          <span class="material-icons-outlined">badge</span>
+          <select formControlName="documentType">
+            <option value="DNI">DNI</option>
+            <option value="CE">CE</option>
+            <option value="PASSPORT">PASSPORT</option>
+          </select>
+        </div>
+
+        <label>DOCUMENT NUMBER</label>
+        <div class="input-row">
+          <span class="material-icons-outlined">assignment_ind</span>
+          <input type="text" formControlName="documentNumber" placeholder="12345678">
+        </div>
+
+        <p class="error-message" *ngIf="errorMessage">
+          {{ errorMessage }}
+        </p>
+
+        <p class="success-message" *ngIf="successMessage">
+          {{ successMessage }}
+        </p>
+
+        <button
+          type="submit"
+          class="register-button"
+          [disabled]="registerForm.invalid || isLoading">
+          {{ isLoading ? 'Creating account...' : 'Create Admin Account' }}
+        </button>
+
+        <button
+          type="button"
+          class="login-button"
+          (click)="goToLogin()">
+          Back to Login
+        </button>
+      </form>
     </div>
 
     <div class="credits">

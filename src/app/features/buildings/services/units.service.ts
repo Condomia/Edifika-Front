@@ -1,6 +1,8 @@
 import { Injectable } from '@angular/core';
+
 import { BaseService } from '../../../shared/services/base.service';
 import { Unit } from '../model/unit.model';
+import { environment } from '../../../../environments/environment';
 
 @Injectable({
   providedIn: 'root'
@@ -8,6 +10,6 @@ import { Unit } from '../model/unit.model';
 export class UnitsService extends BaseService<Unit> {
   constructor() {
     super();
-    this.resourceEndpoint = '/units';
+    this.resourceEndpoint = environment.unitEndpointPath;
   }
 }

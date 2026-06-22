@@ -1,7 +1,8 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
 import { forkJoin } from 'rxjs';
-import { UnitService } from '../../../buildings/services/unit.service';
+
+import { UnitsService } from '../../../buildings/services/units.service';
 import { ReservationService } from '../../../reservations/services/reservation.service';
 import { CommonAreaService } from '../../../reservations/services/common-area.service';
 import { DashboardService } from '../../services/dashboard.service';
@@ -15,14 +16,14 @@ import { DashboardService } from '../../services/dashboard.service';
   styleUrl: './dashboard.css'
 })
 export class Dashboard implements OnInit {
-  private unitService = inject(UnitService);
+  private unitService = inject(UnitsService);
   private reservationService = inject(ReservationService);
   private commonAreaService = inject(CommonAreaService);
   private dashboardService = inject(DashboardService);
   private datePipe = inject(DatePipe);
 
   currentDate = new Date();
-  
+
   occupancyRate = 0;
   occupiedUnits = 0;
   totalUnits = 0;
@@ -42,51 +43,64 @@ export class Dashboard implements OnInit {
     this.loadCommunityWall();
   }
 
-  loadOccupancy() {
+  loadOccupancy(): void {
     this.unitService.getAll().subscribe(units => {
       this.totalUnits = units.length;
       this.occupiedUnits = units.filter(u => u.status === 'OCCUPIED').length;
-      this.occupancyRate = this.totalUnits ? Math.round((this.occupiedUnits / this.totalUnits) * 100) : 0;
+      this.occupancyRate = this.totalUnits
+        ? Math.round((this.occupiedUnits / this.totalUnits) * 100)
+        : 0;
     });
   }
 
-
-
-  loadFinancials() {
+  loadFinancials(): void {
     forkJoin({
       payments: this.dashboardService.getPayments(),
       debts: this.dashboardService.getDebts()
     }).subscribe(({ payments, debts }) => {
-      this.totalCollected = payments.reduce((sum, p) => sum + p.amount, 0);
-      
+      this.totalCollected = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+
       const pendingDebts = debts.filter(d => d.status === 'PENDING');
       this.pendingDebtsCount = pendingDebts.length;
-      this.pendingDebtsAmount = pendingDebts.reduce((sum, d) => sum + d.amount, 0);
+      this.pendingDebtsAmount = pendingDebts.reduce((sum, d) => sum + Number(d.amount), 0);
 
-      const totalDebt = debts.reduce((sum, d) => sum + d.amount, 0);
+      const totalDebt = debts.reduce((sum, d) => sum + Number(d.amount), 0);
       const totalExpected = this.totalCollected + totalDebt;
-      this.delinquencyRate = totalExpected ? Number(((totalDebt / totalExpected) * 100).toFixed(1)) : 0;
+
+      this.delinquencyRate = totalExpected
+        ? Number(((totalDebt / totalExpected) * 100).toFixed(1))
+        : 0;
     });
   }
 
-  loadReservations() {
+  loadReservations(): void {
     forkJoin({
       reservations: this.reservationService.getAll(),
       commonAreas: this.commonAreaService.getAll()
     }).subscribe(({ reservations, commonAreas }) => {
-      const activeRes = reservations.filter(r => r.status === 'ACTIVE').slice(0, 3);
-      this.pendingReservations = activeRes.map(res => {
-        const area = commonAreas.find(a => a.id === String(res.commonAreaId) || a.id == res.commonAreaId);
+      const activeReservations = reservations
+        .filter(r => r.status === 'ACTIVE')
+        .slice(0, 3);
+
+      this.pendingReservations = activeReservations.map(reservation => {
+        const area = commonAreas.find(
+          area => Number(area.id) === Number(reservation.commonAreaId)
+        );
+
         return {
-          ...res,
-          areaName: area ? area.name : 'Unknown Area',
-          formattedDate: this.datePipe.transform(res.reservationDate, 'MMM d') + ' • ' + res.timeSlot + ':00'
+          ...reservation,
+          areaName: area?.name ?? 'Unknown Area',
+          formattedDate:
+            this.datePipe.transform(reservation.reservationDate, 'MMM d') +
+            ' • ' +
+            reservation.timeSlot +
+            ':00'
         };
       });
     });
   }
 
-  loadCommunityWall() {
+  loadCommunityWall(): void {
     this.dashboardService.getPosts().subscribe(posts => {
       this.communityPosts = posts.slice(0, 5);
     });

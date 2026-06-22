@@ -20,8 +20,9 @@ import { UsersService } from '../../../users/services/users.service';
 })
 export class UnitFormComponent implements OnInit {
   @Input() unit!: Unit;
-  @Output() close = new EventEmitter<boolean>();
   @Input() isCreateMode = false;
+  @Output() close = new EventEmitter<boolean>();
+
   unitForm!: FormGroup;
   users: User[] = [];
   currentUserUnit: UserUnit | null = null;
@@ -58,11 +59,14 @@ export class UnitFormComponent implements OnInit {
       userUnits: this.userUnitsService.getAll()
     }).subscribe({
       next: ({ users, userUnits }) => {
-        this.users = users;
+        this.users = users.filter(user =>
+          user.status === 'ACTIVE' &&
+          user.roles?.some(role => role === 'OWNER' || role === 'TENANT')
+        );
 
         this.currentUserUnit =
           userUnits.find(uu =>
-            Number(uu.unitId) === Number(this.unit.idUnit) &&
+            Number(uu.idUnit) === Number(this.unit.idUnit) &&
             uu.status === 'ACTIVE'
           ) ?? null;
 
@@ -88,6 +92,7 @@ export class UnitFormComponent implements OnInit {
       this.updateUnit();
     }
   }
+
   createUnit(): void {
     const formValue = this.unitForm.value;
     const newId = Date.now();
@@ -95,7 +100,7 @@ export class UnitFormComponent implements OnInit {
     const newUnit: Unit = {
       id: newId,
       idUnit: newId,
-      buildingId: 1,
+      idBuilding: this.unit?.idBuilding ?? 1,
       unitNumber: Number(formValue.unitNumber),
       floor: Number(formValue.floor),
       coveredArea: Number(formValue.coveredArea),
@@ -113,7 +118,8 @@ export class UnitFormComponent implements OnInit {
           const newRelation: UserUnit = {
             id: Date.now(),
             idUserUnit: Date.now(),
-            unitId: newId,
+            idBuilding: newUnit.idBuilding,
+            idUnit: newId,
             idUser: selectedUserId,
             startDate: new Date().toISOString(),
             endDate: null,
@@ -152,7 +158,7 @@ export class UnitFormComponent implements OnInit {
       status: formValue.status
     };
 
-    this.unitsService.update(this.unit.id, updatedUnit).subscribe({
+    this.unitsService.update(this.unit.id!, updatedUnit).subscribe({
       next: () => this.updateUserUnit(Number(formValue.idUser)),
       error: err => {
         console.error('Error updating unit:', err);
@@ -160,6 +166,7 @@ export class UnitFormComponent implements OnInit {
       }
     });
   }
+
   updateUserUnit(newUserId: number): void {
     const hasSelectedUser = newUserId > 0;
 
@@ -175,7 +182,7 @@ export class UnitFormComponent implements OnInit {
         endDate: new Date().toISOString()
       };
 
-      this.userUnitsService.update(this.currentUserUnit.id, inactiveRelation).subscribe({
+      this.userUnitsService.update(this.currentUserUnit.id!, inactiveRelation).subscribe({
         next: () => this.finish(),
         error: err => {
           console.error('Error removing resident:', err);
@@ -194,7 +201,7 @@ export class UnitFormComponent implements OnInit {
         endDate: null
       };
 
-      this.userUnitsService.update(this.currentUserUnit.id, updatedRelation).subscribe({
+      this.userUnitsService.update(this.currentUserUnit.id!, updatedRelation).subscribe({
         next: () => this.finish(),
         error: err => {
           console.error('Error changing resident:', err);
@@ -206,9 +213,10 @@ export class UnitFormComponent implements OnInit {
     }
 
     const newRelation: UserUnit = {
-      id: 0,
+      id: Date.now(),
       idUserUnit: Date.now(),
-      unitId: this.unit.idUnit,
+      idBuilding: this.unit.idBuilding,
+      idUnit: this.unit.idUnit,
       idUser: newUserId,
       startDate: new Date().toISOString(),
       endDate: null,

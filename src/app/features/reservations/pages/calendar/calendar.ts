@@ -2,24 +2,24 @@ import { ReservationService } from '../../services/reservation.service';
 import { CommonAreaService } from '../../services/common-area.service';
 import { Reservation } from '../../model/reservation.model';
 import { CommonArea } from '../../model/common-area.model';
-import {UsersService} from '../../../users/services/users.service';
-import {User} from '../../../users/model/user.model';
-import { forkJoin } from 'rxjs';
-import { CommonAreaRulesService } from '../../services/common-area-rules.service';
-import { CommonAreaRule } from '../../model/common-area-rule.model';
+import { UsersService } from '../../../users/services/users.service';
+import { User } from '../../../users/model/user.model';
+import { forkJoin, Subject } from 'rxjs';
 import { ReservationListComponent } from '../../components/reservation-list.component/reservation-list.component';
 import { ReservationDetailComponent } from '../../components/reservation-detail.component/reservation-detail.component';
+
 import {
   Component,
   ChangeDetectionStrategy,
   ViewChild,
-  TemplateRef, OnInit,
+  TemplateRef,
+  OnInit,
 } from '@angular/core';
+
 import {
-  isSameDay,
   isSameMonth,
 } from 'date-fns';
-import { Subject } from 'rxjs';
+
 import {
   provideCalendar,
   CalendarEvent,
@@ -32,12 +32,15 @@ import {
   CalendarDatePipe,
   DateAdapter,
 } from 'angular-calendar';
+
 import { EventColor } from 'calendar-utils';
 import { FormsModule } from '@angular/forms';
+
 import {
   provideFlatpickrDefaults,
 } from 'angularx-flatpickr';
-import {DatePipe, CommonModule} from '@angular/common';
+
+import { DatePipe, CommonModule } from '@angular/common';
 import { adapterFactory } from 'angular-calendar/date-adapters/date-fns';
 
 const colors: Record<string, EventColor> = {
@@ -78,18 +81,23 @@ const colors: Record<string, EventColor> = {
     provideCalendar({ provide: DateAdapter, useFactory: adapterFactory }),
   ],
 })
-export class Calendar implements OnInit  {
+export class Calendar implements OnInit {
   constructor(
     private reservationService: ReservationService,
     private commonAreaService: CommonAreaService,
-    private usersService: UsersService,
-    private commonAreaRulesService: CommonAreaRulesService
-) {}
+    private usersService: UsersService
+  ) {}
+
+  @ViewChild('modalContent', { static: true }) modalContent!: TemplateRef<any>;
+
   showCreateReservationModal = false;
+  showDayReservationsModal = false;
+  showReservationDetailModal = false;
+
   commonAreas: CommonArea[] = [];
   users: User[] = [];
   reservations: Reservation[] = [];
-  commonAreaRules: CommonAreaRule[] = [];
+
   todayDate = new Date().toISOString().split('T')[0];
   reservationError = '';
 
@@ -101,25 +109,58 @@ export class Calendar implements OnInit  {
     numberOfGuests: 1
   };
 
+  view: CalendarView = CalendarView.Month;
+  CalendarView = CalendarView;
+  viewDate: Date = new Date();
+
+  modalData?: {
+    action: string;
+    event: CalendarEvent;
+  };
+
+  refresh = new Subject<void>();
+  events: CalendarEvent[] = [];
+
+  selectedDayReservations: CalendarEvent[] = [];
+  selectedReservationDetail: any = null;
+  activeDayIsOpen = true;
+
+  actions: CalendarEventAction[] = [
+    {
+      label: '<i class="fas fa-fw fa-pencil-alt"></i>',
+      a11yLabel: 'Edit',
+      onClick: ({ event }: { event: CalendarEvent }): void => {
+        this.handleEvent('Edited', event);
+      },
+    },
+    {
+      label: '<i class="fas fa-fw fa-trash-alt"></i>',
+      a11yLabel: 'Delete',
+      onClick: ({ event }: { event: CalendarEvent }): void => {
+        this.events = this.events.filter(iEvent => iEvent !== event);
+        this.handleEvent('Deleted', event);
+      },
+    },
+  ];
 
   ngOnInit(): void {
+    this.loadCalendarData();
+  }
+
+  loadCalendarData(): void {
     forkJoin({
       reservations: this.reservationService.getAll(),
       commonAreas: this.commonAreaService.getAll(),
-      users: this.usersService.getAll(),
-      rules: this.commonAreaRulesService.getAll()
-
-    }).subscribe(({ reservations, commonAreas, users, rules }) => {
+      users: this.usersService.getAll()
+    }).subscribe(({ reservations, commonAreas, users }) => {
       this.commonAreas = commonAreas;
+
       this.users = users.filter(user =>
         user.status === 'ACTIVE' &&
-        user.roles?.some(role =>
-          role.name === 'OWNER' || role.name === 'TENANT'
-        )
+        user.roles?.some(role => role === 'OWNER' || role === 'TENANT')
       );
-      this.commonAreaRules = rules;
-      this.reservations = reservations;
 
+      this.reservations = reservations;
 
       this.events = reservations.map((reservation: Reservation) => {
         const area = commonAreas.find(
@@ -147,47 +188,6 @@ export class Calendar implements OnInit  {
     });
   }
 
-  @ViewChild('modalContent', { static: true }) modalContent!: TemplateRef<any>;
-  view: CalendarView = CalendarView.Month;
-
-  CalendarView = CalendarView;
-
-  viewDate: Date = new Date();
-
-  modalData?: {
-    action: string;
-    event: CalendarEvent;
-  };
-
-  actions: CalendarEventAction[] = [
-    {
-      label: '<i class="fas fa-fw fa-pencil-alt"></i>',
-      a11yLabel: 'Edit',
-      onClick: ({ event }: { event: CalendarEvent }): void => {
-        this.handleEvent('Edited', event);
-      },
-    },
-    {
-      label: '<i class="fas fa-fw fa-trash-alt"></i>',
-      a11yLabel: 'Delete',
-      onClick: ({ event }: { event: CalendarEvent }): void => {
-        this.events = this.events.filter((iEvent) => iEvent !== event);
-        this.handleEvent('Deleted', event);
-      },
-    },
-  ];
-
-  refresh = new Subject<void>();
-
-  events: CalendarEvent[] = [];
-  showDayReservationsModal = false;
-  showReservationDetailModal = false;
-
-  selectedDayReservations: any[] = [];
-  selectedReservationDetail: any = null;
-  activeDayIsOpen: boolean = true;
-
-
   dayClicked({ date, events }: { date: Date; events: CalendarEvent[] }): void {
     if (!isSameMonth(date, this.viewDate)) return;
 
@@ -203,6 +203,7 @@ export class Calendar implements OnInit  {
       this.showDayReservationsModal = true;
     }
   }
+
   getReservationColor(
     reservation: Reservation,
     commonArea?: CommonArea
@@ -218,15 +219,16 @@ export class Calendar implements OnInit  {
     return colors['active'];
   }
 
-
   handleEvent(action: string, event: CalendarEvent): void {
     this.modalData = { event, action };
     console.log(action, event);
   }
-  openCreateReservationModal() {
+
+  openCreateReservationModal(): void {
     this.showCreateReservationModal = true;
   }
-  closeCreateReservationModal() {
+
+  closeCreateReservationModal(): void {
     this.showCreateReservationModal = false;
 
     this.reservationForm = {
@@ -237,7 +239,8 @@ export class Calendar implements OnInit  {
       numberOfGuests: 1
     };
   }
-  createReservation() {
+
+  createReservation(): void {
     this.reservationError = '';
 
     const selectedArea = this.commonAreas.find(
@@ -257,6 +260,7 @@ export class Calendar implements OnInit  {
       this.reservationError = 'You cannot reserve a date before today.';
       return;
     }
+
     if (!this.reservationForm.residentId) {
       this.reservationError = 'Please select a resident.';
       return;
@@ -281,16 +285,13 @@ export class Calendar implements OnInit  {
       this.reservationError = `This area only allows up to ${selectedArea.maxCapacity} guests.`;
       return;
     }
-    const selectedRule = this.commonAreaRules.find(
-      rule => String(rule.commonAreaId) === String(selectedArea.id)
-    );
-//Validar que las reservas no choquen entre si
-    const maxReservationHours = selectedRule?.maxReservationHours ?? 1;
+
+    const maxReservationHours = selectedArea.rules?.maxReservationHours ?? 1;
 
     const newStart = timeSlot;
     const newEnd = timeSlot + maxReservationHours;
 
-    const hasConflict = this.reservations.some((reservation) => {
+    const hasConflict = this.reservations.some(reservation => {
       if (reservation.status === 'CANCELLED') return false;
 
       const sameArea =
@@ -301,11 +302,11 @@ export class Calendar implements OnInit  {
 
       if (!sameArea || !sameDate) return false;
 
-      const existingRule = this.commonAreaRules.find(
-        rule => String(rule.commonAreaId) === String(reservation.commonAreaId)
+      const existingArea = this.commonAreas.find(
+        area => Number(area.id) === Number(reservation.commonAreaId)
       );
 
-      const existingDuration = existingRule?.maxReservationHours ?? 1;
+      const existingDuration = existingArea?.rules?.maxReservationHours ?? 1;
 
       const existingStart = Number(reservation.timeSlot);
       const existingEnd = existingStart + existingDuration;
@@ -315,12 +316,13 @@ export class Calendar implements OnInit  {
 
     if (hasConflict) {
       this.reservationError =
-        `This area already has a reservation that overlaps with this time slot.`;
+        'This area already has a reservation that overlaps with this time slot.';
       return;
     }
+
     const newReservation: Reservation = {
       residentId: Number(this.reservationForm.residentId),
-      commonAreaId: this.reservationForm.commonAreaId,
+      commonAreaId: Number(this.reservationForm.commonAreaId),
       reservationDate,
       timeSlot,
       numberOfGuests,
@@ -329,12 +331,12 @@ export class Calendar implements OnInit  {
       penaltyApplied: false
     };
 
-    this.reservationService.create(newReservation as Reservation).subscribe({
+    this.reservationService.create(newReservation).subscribe({
       next: () => {
         this.closeCreateReservationModal();
         window.location.reload();
       },
-      error: (error) => console.error(error)
+      error: error => console.error(error)
     });
   }
 
@@ -345,22 +347,24 @@ export class Calendar implements OnInit  {
 
     return area?.maxCapacity ?? 1;
   }
-  openReservationDetail(event: CalendarEvent) {
+
+  openReservationDetail(event: CalendarEvent): void {
     this.selectedReservationDetail = event.meta;
     this.showDayReservationsModal = false;
     this.showReservationDetailModal = true;
   }
 
-  closeDayReservationsModal() {
+  closeDayReservationsModal(): void {
     this.showDayReservationsModal = false;
     this.selectedDayReservations = [];
   }
 
-  closeReservationDetailModal() {
+  closeReservationDetailModal(): void {
     this.showReservationDetailModal = false;
     this.selectedReservationDetail = null;
   }
-  cancelReservation(detail: any) {
+
+  cancelReservation(detail: any): void {
     const reservation: Reservation = {
       ...detail.reservation,
       status: 'CANCELLED'
@@ -371,9 +375,10 @@ export class Calendar implements OnInit  {
         this.closeReservationDetailModal();
         window.location.reload();
       },
-      error: (error) => console.error(error)
+      error: error => console.error(error)
     });
   }
+
   formatHour(hour: number): string {
     return `${hour.toString().padStart(2, '0')}:00`;
   }

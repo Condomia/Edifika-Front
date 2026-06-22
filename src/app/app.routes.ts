@@ -1,24 +1,61 @@
 import { Routes } from '@angular/router';
+
 import { Login } from './features/auth/pages/login/login';
 import { Register } from './features/auth/pages/register/register';
 import { Layout } from './core/layout/layout';
+import { authGuard } from './shared/guards/auth.guard';
 
 export const routes: Routes = [
   { path: '', redirectTo: 'login', pathMatch: 'full' },
+
   { path: 'login', component: Login },
   { path: 'register', component: Register },
+
   {
     path: 'app',
     component: Layout,
+    canActivate: [authGuard],
     children: [
       { path: '', redirectTo: 'dashboard', pathMatch: 'full' },
-      { path: 'dashboard', loadComponent: () => import('./features/dashboard/pages/dashboard/dashboard').then(m => m.Dashboard) },
-      { path: 'units', loadComponent: () => import('./core/units/units').then(m => m.Units) },
-      { path: 'common-areas', loadComponent: () => import('./core/common-areas/common-areas').then(m => m.CommonAreas) },
-      { path: 'finance', loadComponent: () => import('./core/finance/finance').then(m => m.Finance) },
-      { path: 'community-wall', loadComponent: () => import('./core/community-wall/community-wall').then(m => m.CommunityWall) },
-      { path: 'settings', loadComponent: () => import('./core/settings/settings').then(m => m.Settings) }
+
+      {
+        path: 'dashboard',
+        loadComponent: () =>
+          import('./features/dashboard/pages/dashboard/dashboard')
+            .then(m => m.Dashboard)
+      },
+      {
+        path: 'units',
+        loadComponent: () =>
+          import('./core/units/units')
+            .then(m => m.Units)
+      },
+      {
+        path: 'common-areas',
+        loadComponent: () =>
+          import('./core/common-areas/common-areas')
+            .then(m => m.CommonAreas)
+      },
+      {
+        path: 'finance',
+        loadComponent: () =>
+          import('./core/finance/finance')
+            .then(m => m.Finance)
+      },
+      {
+        path: 'community-wall',
+        loadComponent: () =>
+          import('./core/community-wall/community-wall')
+            .then(m => m.CommunityWall)
+      },
+      {
+        path: 'settings',
+        loadComponent: () =>
+          import('./core/settings/settings')
+            .then(m => m.Settings)
+      }
     ]
   },
+
   { path: '**', redirectTo: 'login' }
 ];

@@ -1,3 +1,5 @@
+import { CommonAreaRule } from './common-area-rule.model';
+
 export type CommonAreaType =
   | 'POOL'
   | 'GYM'
@@ -16,10 +18,11 @@ export type CommonAreaType =
   | 'MULTIPURPOSE_ROOM';
 
 export interface CommonArea {
-  id: number | string;
+  id: number;
   name: string;
   type: CommonAreaType;
   status: 'AVAILABLE' | 'MAINTENANCE';
   maxCapacity: number;
   bookingType: 'EXCLUSIVE' | 'SHARED';
+  rules: CommonAreaRule | null;
 }

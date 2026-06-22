@@ -1,87 +1,76 @@
 {
   "users": [
     {
-      "id": "1",
+      "id": 1,
       "fullName": "Admin Edifika",
       "email": "admin@edifika.com",
-      "passwordHash": "$2a$10$examplehashadmin",
       "phone": "999999999",
       "status": "ACTIVE",
       "documentType": "DNI",
       "documentNumber": "12345678",
-      "roles": [
-        {
-          "id": 1,
-          "name": "ADMIN"
-        }
-      ]
+      "roles": ["ADMIN"]
     },
     {
-      "id": "2",
+      "id": 2,
       "fullName": "Residente Demo",
       "email": "resident@edifika.com",
-      "passwordHash": "$2a$10$examplehashresident",
       "phone": "988888888",
       "status": "ACTIVE",
       "documentType": "DNI",
       "documentNumber": "87654321",
-      "roles": [
-        {
-          "id": 3,
-          "name": "TENANT"
-        }
-      ]
+      "roles": ["TENANT"]
     },
     {
-      "id": "3",
+      "id": 3,
       "fullName": "Propietario Demo",
       "email": "owner@edifika.com",
-      "passwordHash": "$2a$10$examplehashowner",
       "phone": "977777777",
       "status": "ACTIVE",
       "documentType": "CE",
       "documentNumber": "A1234567",
-      "roles": [
-        {
-          "id": 2,
-          "name": "OWNER"
-        }
-      ]
+      "roles": ["OWNER"]
     }
   ],
   "roles": [
     {
-      "id": "1",
+      "id": 1,
       "name": "ADMIN"
     },
     {
-      "id": "2",
+      "id": 2,
       "name": "OWNER"
     },
     {
-      "id": "3",
+      "id": 3,
       "name": "TENANT"
     }
   ],
   "authentication": [
     {
-      "id": "1",
+      "id": 1,
       "email": "admin@edifika.com",
       "password": "admin123",
       "token": "fake-jwt-token-admin",
       "userId": 1
     },
     {
-      "id": "2",
+      "id": 2,
       "email": "resident@edifika.com",
       "password": "resident123",
       "token": "fake-jwt-token-resident",
       "userId": 2
+    },
+    {
+      "id": 3,
+      "email": "owner@edifika.com",
+      "password": "owner123",
+      "token": "fake-jwt-token-owner",
+      "userId": 3
     }
   ],
   "buildings": [
     {
-      "id": "1",
+      "id": 1,
       "idBuilding": 1,
       "name": "Edificio Los Olivos",
       "address": "Av. Principal 123",
@@ -89,7 +78,7 @@
       "city": "Lima"
     },
     {
-      "id": "2",
+      "id": 2,
       "idBuilding": 2,
       "name": "Condominio San Gabriel",
       "address": "Calle Las Flores 456",
@@ -99,9 +88,9 @@
   ],
   "units": [
     {
-      "id": "1",
+      "id": 1,
       "idUnit": 1,
-      "buildingId": 1,
+      "idBuilding": 1,
       "unitNumber": 101,
       "floor": 1,
       "coveredArea": 85.5,
@@ -111,9 +100,9 @@
       "status": "AVAILABLE"
     },
     {
-      "id": "2",
+      "id": 2,
       "idUnit": 2,
-      "buildingId": 1,
+      "idBuilding": 1,
       "unitNumber": 102,
       "floor": 1,
       "coveredArea": 78,
@@ -123,9 +112,9 @@
       "status": "OCCUPIED"
     },
     {
-      "id": "3",
+      "id": 3,
       "idUnit": 3,
-      "buildingId": 2,
+      "idBuilding": 2,
       "unitNumber": 201,
       "floor": 2,
       "coveredArea": 90,
@@ -137,18 +126,20 @@
   ],
   "userUnits": [
     {
-      "id": "1",
+      "id": 1,
       "idUserUnit": 1,
-      "unitId": 2,
+      "idBuilding": 1,
+      "idUnit": 2,
       "idUser": 2,
       "startDate": "2026-01-10T08:00:00",
       "endDate": null,
       "status": "ACTIVE"
     },
     {
-      "id": "2",
+      "id": 2,
       "idUserUnit": 2,
-      "unitId": 3,
+      "idBuilding": 2,
+      "idUnit": 3,
       "idUser": 3,
       "startDate": "2026-02-15T09:30:00",
       "endDate": null,
@@ -157,66 +148,105 @@
   ],
   "commonAreas": [
     {
-      "id": "1",
+      "id": 1,
       "name": "Piscina principal Mayor",
       "type": "POOL",
       "status": "AVAILABLE",
       "maxCapacity": 10,
-      "bookingType": "SHARED"
+      "bookingType": "SHARED",
+      "rules": {
+        "maxReservationHours": 2,
+        "requiresPayment": false,
+        "price": 0,
+        "requiresGuarantee": true,
+        "guaranteeAmount": 50,
+        "allowCancellation": true,
+        "penaltyHoursBefore": 24,
+        "penaltyAmount": 20,
+        "requiresApproval": false
+      }
     },
     {
-      "id": "2",
+      "id": 2,
       "name": "Gimnasio",
       "type": "GYM",
       "status": "AVAILABLE",
       "maxCapacity": 15,
-      "bookingType": "SHARED"
+      "bookingType": "SHARED",
+      "rules": {
+        "maxReservationHours": 1,
+        "requiresPayment": false,
+        "price": 0,
+        "requiresGuarantee": false,
+        "guaranteeAmount": 0,
+        "allowCancellation": true,
+        "penaltyHoursBefore": 12,
+        "penaltyAmount": 10,
+        "requiresApproval": false
+      }
     },
     {
-      "id": "3",
+      "id": 3,
       "name": "Sala de coworking",
       "type": "COWORKING_ROOM",
       "status": "AVAILABLE",
       "maxCapacity": 8,
-      "bookingType": "SHARED"
+      "bookingType": "SHARED",
+      "rules": {
+        "maxReservationHours": 3,
+        "requiresPayment": true,
+        "price": 15,
+        "requiresGuarantee": true,
+        "guaranteeAmount": 30,
+        "allowCancellation": true,
+        "penaltyHoursBefore": 24,
+        "penaltyAmount": 15,
+        "requiresApproval": true
+      }
     },
     {
-      "id": "4",
-      "name": "Parrila",
+      "id": 4,
+      "name": "Parrilla",
       "type": "BBQ_AREA",
       "status": "AVAILABLE",
       "maxCapacity": 8,
-      "bookingType": "SHARED"
+      "bookingType": "SHARED",
+      "rules": {
+        "maxReservationHours": 10,
+        "requiresPayment": true,
+        "price": 20,
+        "requiresGuarantee": true,
+        "guaranteeAmount": 50,
+        "allowCancellation": true,
+        "penaltyHoursBefore": 24,
+        "penaltyAmount": 100,
+        "requiresApproval": false
+      }
     },
     {
-      "id": "5",
+      "id": 5,
       "name": "Terraza",
       "type": "TERRACE",
       "status": "AVAILABLE",
       "maxCapacity": 8,
-      "bookingType": "SHARED"
-    },
-    {
-      "id": "6",
-      "name": "Terraza",
-      "type": "POOL",
-      "status": "AVAILABLE",
-      "maxCapacity": 15,
-      "bookingType": "SHARED"
-    },
-    {
-      "name": "Area Prueba",
-      "type": "MEETING_ROOM",
-      "status": "AVAILABLE",
-      "maxCapacity": 12,
       "bookingType": "SHARED",
-      "id": "7"
+      "rules": {
+        "maxReservationHours": 1,
+        "requiresPayment": true,
+        "price": 10,
+        "requiresGuarantee": false,
+        "guaranteeAmount": 0,
+        "allowCancellation": true,
+        "penaltyHoursBefore": 24,
+        "penaltyAmount": 100,
+        "requiresApproval": false
+      }
     }
   ],
   "commonAreaRules": [
     {
-      "id": "1",
-      "commonAreaId": "1",
+      "id": 1,
+      "commonAreaId": 1,
       "maxReservationHours": 2,
       "requiresPayment": false,
       "price": 0,
@@ -228,7 +258,7 @@
       "requiresApproval": false
     },
     {
-      "id": "2",
+      "id": 2,
       "commonAreaId": 2,
       "maxReservationHours": 1,
       "requiresPayment": false,
@@ -241,7 +271,7 @@
       "requiresApproval": false
     },
     {
-      "id": "3",
+      "id": 3,
       "commonAreaId": 3,
       "maxReservationHours": 3,
       "requiresPayment": true,
@@ -254,7 +284,7 @@
       "requiresApproval": true
     },
     {
-      "id": "4",
+      "id": 4,
       "commonAreaId": 4,
       "maxReservationHours": 10,
       "requiresPayment": true,
@@ -267,6 +297,7 @@
       "requiresApproval": false
     },
     {
+      "id": 5,
       "commonAreaId": 5,
       "maxReservationHours": 1,
       "requiresPayment": true,
@@ -276,16 +307,15 @@
       "allowCancellation": true,
       "penaltyHoursBefore": 24,
       "penaltyAmount": 100,
-      "requiresApproval": false,
-      "id": "5"
+      "requiresApproval": false
     }
   ],
   "reservations": [
     {
-      "id": "1",
-      "residentId": 1,
+      "id": 1,
+      "residentId": 2,
       "commonAreaId": 1,
-      "reservationDate": "2026-06-08",
+      "reservationDate": "2026-06-25",
       "timeSlot": 9,
       "numberOfGuests": 4,
       "status": "ACTIVE",
@@ -293,10 +323,10 @@
       "penaltyApplied": false
     },
     {
-      "id": "2",
+      "id": 2,
       "residentId": 2,
       "commonAreaId": 2,
-      "reservationDate": "2026-06-09",
+      "reservationDate": "2026-06-26",
       "timeSlot": 15,
       "numberOfGuests": 1,
       "status": "ACTIVE",
@@ -304,105 +334,75 @@
       "penaltyApplied": false
     },
     {
-      "id": "3",
-      "residentId": 1,
-      "commonAreaId": 1,
-      "reservationDate": "2026-06-10",
+      "id": 3,
+      "residentId": 3,
+      "commonAreaId": 3,
+      "reservationDate": "2026-06-27",
       "timeSlot": 18,
       "numberOfGuests": 6,
       "status": "CANCELLED",
       "qrCodeAccess": "4c8a9f70-3333-5555-7777-ghi123987654",
       "penaltyApplied": true
-    },
-    {
-      "residentId": 1,
-      "commonAreaId": 1,
-      "reservationDate": "2026-03-04",
-      "timeSlot": 15,
-      "numberOfGuests": 15,
-      "status": "ACTIVE",
-      "qrCodeAccess": "54c3fa20-9f23-483b-a129-c377f0cd55bf",
-      "penaltyApplied": false,
-      "id": "ythkbstJ7TQ"
-    },
-    {
-      "residentId": 0,
-      "commonAreaId": "3",
-      "reservationDate": "2026-06-20",
-      "timeSlot": 9,
-      "numberOfGuests": 1,
-      "status": "CANCELLED",
-      "qrCodeAccess": "6e4eea2c-a69f-4a26-945d-54a7285313af",
-      "penaltyApplied": false,
-      "id": "5jVe0NHL7pU"
-    },
-    {
-      "residentId": 2,
-      "commonAreaId": "5",
-      "reservationDate": "2026-06-20",
-      "timeSlot": 9,
-      "numberOfGuests": 7,
-      "status": "ACTIVE",
-      "qrCodeAccess": "913d0dbb-ea47-4ace-b284-e40db4bc15b8",
-      "penaltyApplied": false,
-      "id": "Lg0Gz3tfpKA"
-    },
-    {
-      "residentId": 2,
-      "commonAreaId": "3",
-      "reservationDate": "2026-06-20",
-      "timeSlot": 12,
-      "numberOfGuests": 1,
-      "status": "ACTIVE",
-      "qrCodeAccess": "230e0d3c-8332-400d-89f4-d207b7694175",
-      "penaltyApplied": false,
-      "id": "k7qTLOnpQxs"
     }
-  ],"debts": [
-  {
-    "id": 1,
-    "idDebt": 1,
-    "unitId": 2,
-    "description": "Maintenance fee October",
-    "date": "2026-06-01T00:00:00",
-    "amount": 850,
-    "status": "PENDING",
-    "createdAt": "2026-06-01T00:00:00"
-  }
-],
+  ],
+  "debts": [
+    {
+      "id": 1,
+      "unitId": 2,
+      "description": "Maintenance fee October",
+      "amount": 850,
+      "currency": "PEN",
+      "dueDate": "2026-06-30",
+      "status": "PENDING"
+    },
+    {
+      "id": 2,
+      "unitId": 3,
+      "description": "Maintenance fee November",
+      "amount": 720,
+      "currency": "PEN",
+      "dueDate": "2026-07-15",
+      "status": "PENDING"
+    }
+  ],
   "payments": [
     {
       "id": 1,
-      "idPayment": 1,
-      "idDebt": 1,
-      "idUser": 2,
+      "debtId": 1,
+      "userId": 2,
       "amount": 500,
-      "paymentDate": "2026-06-10T00:00:00",
+      "currency": "PEN",
+      "paymentDate": "2026-06-10",
       "paymentMethod": "YAPE",
-      "pdfLink": "",
       "status": "PAID"
+    },
+    {
+      "id": 2,
+      "debtId": 2,
+      "userId": 3,
+      "amount": 720,
+      "currency": "PEN",
+      "paymentDate": "2026-06-18",
+      "paymentMethod": "CARD",
+      "status": "PENDING"
     }
   ],
   "posts": [
     {
       "id": 1,
-      "id_post": 1,
-      "id_user": 3,
-      "id_forum": 1,
-      "image": "https://i.pravatar.cc/150?u=a042581f4e29026704d",
-      "comment": "Is the main elevator maintenance finishing today as scheduled?",
-      "created_at": "2023-10-24T14:15:00",
-      "author_name": "Leo Martinez (Unit 304)"
+      "title": "Mantenimiento del ascensor",
+      "content": "¿El mantenimiento del ascensor principal terminará hoy según lo programado?",
+      "residentId": 2,
+      "imageUrl": "https://i.pravatar.cc/150?u=a042581f4e29026704d",
+      "createdAt": "2026-06-22T14:15:00"
     },
     {
       "id": 2,
-      "id_post": 2,
-      "id_user": 4,
-      "id_forum": 1,
-      "image": "https://i.pravatar.cc/150?u=a042581f4e29026704e",
-      "comment": "Lost a set of blue keys near the gym area. If anyone finds them, please let me know!",
-      "created_at": "2023-10-24T13:45:00",
-      "author_name": "Jessica Park (Unit 912)"
+      "title": "Llaves perdidas",
+      "content": "Se perdió un juego de llaves azules cerca del gimnasio. Si alguien las encuentra, por favor avise.",
+      "residentId": 3,
+      "imageUrl": "https://i.pravatar.cc/150?u=a042581f4e29026704e",
+      "createdAt": "2026-06-22T13:45:00"
     }
   ],
   "$schema": "./node_modules/json-server/schema.json"

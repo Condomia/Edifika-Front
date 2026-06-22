@@ -55,7 +55,7 @@
           <select formControlName="idUser">
             <option value="">No Resident</option>
             <option *ngFor="let user of users" [value]="user.id">
-              {{ user.fullName }} - {{ user.roles[0]?.name }}
+              {{ user.fullName }} - {{ user.roles[0] }}
             </option>
           </select>
         </div>

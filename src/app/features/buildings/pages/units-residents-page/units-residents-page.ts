@@ -18,12 +18,17 @@ import { UnitFormComponent } from '../../components/unit-form.component/unit-for
 @Component({
   selector: 'app-units-residents-page',
   standalone: true,
-  imports: [CommonModule,UnitFormComponent],
+  imports: [CommonModule, UnitFormComponent],
   templateUrl: './units-residents-page.html',
   styleUrl: './units-residents-page.css',
 })
 export class UnitsResidentsPage implements OnInit {
   rows: UnitResidentView[] = [];
+  units: Unit[] = [];
+
+  selectedUnit: Unit | null = null;
+  isCreatingUnit = false;
+  isEditingUnit = false;
 
   totalUnits = 0;
   outstandingDebt = 0;
@@ -40,10 +45,7 @@ export class UnitsResidentsPage implements OnInit {
   ngOnInit(): void {
     this.loadData();
   }
-  selectedUnit: Unit | null = null;
-  isCreatingUnit = false;
-  isEditingUnit = false;
-  units: Unit[] = [];
+
   loadData(): void {
     forkJoin({
       users: this.usersService.getAll(),
@@ -55,9 +57,10 @@ export class UnitsResidentsPage implements OnInit {
         this.totalUnits = units.length;
         this.maintenanceRequests = units.filter(u => u.status === 'MAINTENANCE').length;
         this.units = units;
+
         this.rows = units.map(unit => {
           const relation = userUnits.find(
-            uu => Number(uu.unitId) === Number(unit.idUnit) && uu.status === 'ACTIVE'
+            uu => Number(uu.idUnit) === Number(unit.idUnit) && uu.status === 'ACTIVE'
           );
 
           const user = relation
@@ -65,7 +68,7 @@ export class UnitsResidentsPage implements OnInit {
             : undefined;
 
           const building = buildings.find(
-            b => Number(b.idBuilding) === Number(unit.buildingId)
+            b => Number(b.idBuilding) === Number(unit.idBuilding)
           );
 
           return this.toView(unit, building, user);
@@ -89,7 +92,7 @@ export class UnitsResidentsPage implements OnInit {
 
       residentId: user?.id,
       residentName: user?.fullName ?? 'No Resident',
-      residentRole: user?.roles?.[0]?.name ?? 'In transition',
+      residentRole: user?.roles?.[0] ?? 'In transition',
       email: user?.email ?? '—',
       phone: user?.phone ?? '',
 
@@ -103,20 +106,11 @@ export class UnitsResidentsPage implements OnInit {
     this.isEditingUnit = true;
   }
 
-  onUnitFormClose(refresh: boolean): void {
-    this.isEditingUnit = false;
-    this.isCreatingUnit = false;
-    this.selectedUnit = null;
-
-    if (refresh) {
-      this.loadData();
-    }
-  }
   createUnit(): void {
     this.selectedUnit = {
       id: 0,
       idUnit: 0,
-      buildingId: 1,
+      idBuilding: 1,
       unitNumber: 0,
       floor: 0,
       coveredArea: 0,
@@ -127,5 +121,15 @@ export class UnitsResidentsPage implements OnInit {
     };
 
     this.isCreatingUnit = true;
+  }
+
+  onUnitFormClose(refresh: boolean): void {
+    this.isEditingUnit = false;
+    this.isCreatingUnit = false;
+    this.selectedUnit = null;
+
+    if (refresh) {
+      this.loadData();
+    }
   }
 }

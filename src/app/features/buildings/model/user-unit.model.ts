@@ -1,7 +1,8 @@
 export interface UserUnit {
-  id: number;
+  id?: number;
   idUserUnit: number;
-  unitId: number;
+  idBuilding?: number;
+  idUnit: number;
   idUser: number;
   startDate: string;
   endDate: string | null;

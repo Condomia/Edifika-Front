@@ -186,3 +186,31 @@ html, body {
     width: 100%;
   }
 }
+.input-row select {
+  border: none;
+  outline: none;
+  flex: 1;
+  min-width: 0;
+  font-size: clamp(15px, 1.5vw, 18px);
+  color: #8b7a86;
+  background-color: transparent;
+}
+
+.register-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.error-message {
+  color: #c62020;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
+
+.success-message {
+  color: #15803d;
+  font-size: 14px;
+  font-weight: 600;
+  margin: 0;
+}
