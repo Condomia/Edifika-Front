@@ -8,7 +8,7 @@
     <div class="settings-sidebar">
       <div class="context-card">
         <div class="context-label">CURRENT CONTEXT</div>
-        <div class="context-title">Torre A - Edifika</div>
+        <div class="context-title">{{ buildingInfo.name || 'Loading...' }}</div>
         <ul class="context-nav">
           <li class="active">
             <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="nav-icon"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
@@ -26,7 +26,9 @@
       <div class="card">
         <div class="card-header">
           <h2>User Profile</h2>
-          <a href="javascript:void(0)" class="edit-link">Edit Details</a>
+          <a href="javascript:void(0)" class="edit-link" (click)="toggleEditUser()">
+            {{ isEditingUser ? 'Cancel' : 'Edit Details' }}
+          </a>
         </div>
         <div class="user-profile-content">
           <div class="avatar-container">
@@ -35,15 +37,21 @@
               <svg xmlns="http://www.w3.org/2000/svg" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"></path><circle cx="12" cy="13" r="4"></circle></svg>
             </div>
           </div>
-          <div class="user-details">
+          <div class="user-details" style="flex: 1;">
+            
             <div class="detail-group">
-              <label>User</label>
-              <div class="detail-value">Elena Vance</div>
+              <label>Full Name</label>
+              <div class="detail-value" *ngIf="!isEditingUser">{{ userProfile.fullName }}</div>
+              <input type="text" *ngIf="isEditingUser" [(ngModel)]="userProfile.fullName" class="edit-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-top: 4px;" />
             </div>
+
             <div class="detail-group">
               <label>Email Address</label>
-              <div class="detail-value">elena.vance@edifika.com</div>
+              <div class="detail-value" *ngIf="!isEditingUser">{{ userProfile.email }}</div>
+              <input type="email" *ngIf="isEditingUser" [(ngModel)]="userProfile.email" class="edit-input" style="width: 100%; padding: 8px; border-radius: 4px; border: 1px solid #ccc; margin-top: 4px;" />
             </div>
+
+            <button *ngIf="isEditingUser" (click)="saveUser()" class="btn-save" style="margin-top: 16px;">Save Profile</button>
           </div>
         </div>
       </div>
@@ -55,23 +63,23 @@
         <div class="property-form">
           <div class="form-group full-width">
             <label>Legal Name</label>
-            <input type="text" value="Torre A - Edifika" readonly />
+            <input type="text" [(ngModel)]="buildingInfo.name" />
           </div>
           <div class="form-row">
             <div class="form-group half-width">
-              <label>Tax ID / Registro</label>
-              <input type="text" value="TX-990-2341-B" readonly />
+              <label>District</label>
+              <input type="text" [(ngModel)]="buildingInfo.district" />
             </div>
             <div class="form-group half-width">
-              <label>Contact Phone</label>
-              <input type="text" value="+1 (555) 012-3456" readonly />
+              <label>City</label>
+              <input type="text" [(ngModel)]="buildingInfo.city" />
             </div>
           </div>
           <div class="form-group full-width">
             <label>Physical Address</label>
-            <input type="text" value="1200 Architecture Way, Suite 400, Urban District, Metropolis 90210" readonly />
+            <input type="text" [(ngModel)]="buildingInfo.address" />
           </div>
-          <button class="btn-save">Save Changes</button>
+          <button class="btn-save" (click)="saveBuilding()">Save Changes</button>
         </div>
       </div>
     </div>
