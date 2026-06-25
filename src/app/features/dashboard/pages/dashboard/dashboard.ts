@@ -1,16 +1,18 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule, DatePipe } from '@angular/common';
+import { RouterModule } from '@angular/router';
 import { forkJoin } from 'rxjs';
 
 import { UnitsService } from '../../../buildings/services/units.service';
 import { ReservationService } from '../../../reservations/services/reservation.service';
 import { CommonAreaService } from '../../../reservations/services/common-area.service';
 import { DashboardService } from '../../services/dashboard.service';
+import { LoginService } from '../../../auth/services/login-service';
 
 @Component({
   selector: 'app-dashboard',
   standalone: true,
-  imports: [CommonModule],
+  imports: [CommonModule, RouterModule],
   providers: [DatePipe],
   templateUrl: './dashboard.html',
   styleUrl: './dashboard.css'
@@ -20,9 +22,12 @@ export class Dashboard implements OnInit {
   private reservationService = inject(ReservationService);
   private commonAreaService = inject(CommonAreaService);
   private dashboardService = inject(DashboardService);
+  private loginService = inject(LoginService);
   private datePipe = inject(DatePipe);
 
   currentDate = new Date();
+  
+  currentUser: any;
 
   occupancyRate = 0;
   occupiedUnits = 0;
@@ -37,6 +42,7 @@ export class Dashboard implements OnInit {
   communityPosts: any[] = [];
 
   ngOnInit(): void {
+    this.currentUser = this.loginService.getCurrentUser();
     this.loadOccupancy();
     this.loadFinancials();
     this.loadReservations();
@@ -44,7 +50,12 @@ export class Dashboard implements OnInit {
   }
 
   loadOccupancy(): void {
-    this.unitService.getAll().subscribe(units => {
+    const buildingId = this.currentUser?.buildingId;
+    const fetchUnits = buildingId 
+      ? this.dashboardService.getUnitsByBuilding(buildingId) 
+      : this.unitService.getAll();
+
+    fetchUnits.subscribe(units => {
       this.totalUnits = units.length;
       this.occupiedUnits = units.filter(u => u.status === 'OCCUPIED').length;
       this.occupancyRate = this.totalUnits
@@ -54,17 +65,27 @@ export class Dashboard implements OnInit {
   }
 
   loadFinancials(): void {
+    const buildingId = this.currentUser?.buildingId;
+    
     forkJoin({
       payments: this.dashboardService.getPayments(),
-      debts: this.dashboardService.getDebts()
-    }).subscribe(({ payments, debts }) => {
-      this.totalCollected = payments.reduce((sum, p) => sum + Number(p.amount), 0);
+      debts: this.dashboardService.getDebts(),
+      units: buildingId ? this.dashboardService.getUnitsByBuilding(buildingId) : this.unitService.getAll()
+    }).subscribe(({ payments, debts, units }) => {
+      const unitIds = units.map(u => u.idUnit || u.id);
+      
+      const filteredDebts = debts.filter(d => unitIds.includes(d.unitId));
+      const debtIds = filteredDebts.map(d => d.id);
+      
+      const filteredPayments = payments.filter(p => debtIds.includes(p.debtId));
 
-      const pendingDebts = debts.filter(d => d.status === 'PENDING');
+      this.totalCollected = filteredPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+
+      const pendingDebts = filteredDebts.filter(d => d.status === 'PENDING');
       this.pendingDebtsCount = pendingDebts.length;
       this.pendingDebtsAmount = pendingDebts.reduce((sum, d) => sum + Number(d.amount), 0);
 
-      const totalDebt = debts.reduce((sum, d) => sum + Number(d.amount), 0);
+      const totalDebt = filteredDebts.reduce((sum, d) => sum + Number(d.amount), 0);
       const totalExpected = this.totalCollected + totalDebt;
 
       this.delinquencyRate = totalExpected
@@ -74,6 +95,9 @@ export class Dashboard implements OnInit {
   }
 
   loadReservations(): void {
+    // Currently, common areas don't have a buildingId in db.json. 
+    // We will leave reservations global or filter them if the model allows.
+    // For now, keeping it global to match the previous structure unless a building relationship exists.
     forkJoin({
       reservations: this.reservationService.getAll(),
       commonAreas: this.commonAreaService.getAll()
@@ -101,6 +125,7 @@ export class Dashboard implements OnInit {
   }
 
   loadCommunityWall(): void {
+    // Wall posts can be global across the community
     this.dashboardService.getPosts().subscribe(posts => {
       this.communityPosts = posts.slice(0, 5);
     });

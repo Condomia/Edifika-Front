@@ -40,9 +40,19 @@ server.post('/authentication/sign-in', (req, res) => {
     return res.status(404).json('Usuario no encontrado');
   }
 
+  const userUnit = db
+    .get('userUnits')
+    .find({ idUser: user.id })
+    .value();
+
+  const buildingId = userUnit ? userUnit.idBuilding : null;
+
   return res.status(200).json({
     id: user.id,
     email: user.email,
+    fullName: user.fullName,
+    roles: user.roles,
+    buildingId: buildingId,
     token: auth.token
   });
 });

@@ -21,4 +21,8 @@ export class DashboardService {
   getPayments(): Observable<any[]> {
     return this.http.get<any[]>(`${this.serverBaseUrl}/payments`);
   }
+
+  getUnitsByBuilding(buildingId: number): Observable<any[]> {
+    return this.http.get<any[]>(`${this.serverBaseUrl}/units?idBuilding=${buildingId}`);
+  }
 }

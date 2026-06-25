@@ -8,7 +8,21 @@
       "status": "ACTIVE",
       "documentType": "DNI",
       "documentNumber": "12345678",
-      "roles": ["ADMIN"]
+      "roles": [
+        "ADMIN"
+      ]
+    },
+    {
+      "id": 5,
+      "fullName": "Admin Dos",
+      "email": "admin2@edifika.com",
+      "phone": "999999998",
+      "status": "ACTIVE",
+      "documentType": "DNI",
+      "documentNumber": "22222222",
+      "roles": [
+        "ADMIN"
+      ]
     },
     {
       "id": 2,
@@ -18,7 +32,9 @@
       "status": "ACTIVE",
       "documentType": "DNI",
       "documentNumber": "87654321",
-      "roles": ["TENANT"]
+      "roles": [
+        "TENANT"
+      ]
     },
     {
       "id": 3,
@@ -28,7 +44,21 @@
       "status": "ACTIVE",
       "documentType": "CE",
       "documentNumber": "A1234567",
-      "roles": ["OWNER"]
+      "roles": [
+        "OWNER"
+      ]
+    },
+    {
+      "id": 4,
+      "fullName": "Propietario Demo 2",
+      "email": "owner2@edifika.com",
+      "phone": "966666666",
+      "status": "ACTIVE",
+      "documentType": "DNI",
+      "documentNumber": "44444444",
+      "roles": [
+        "OWNER"
+      ]
     }
   ],
   "roles": [
@@ -52,6 +82,13 @@
       "password": "admin123",
       "token": "fake-jwt-token-admin",
       "userId": 1
+    },
+    {
+      "id": 5,
+      "email": "admin2@edifika.com",
+      "password": "admin123",
+      "token": "fake-jwt-token-admin2",
+      "userId": 5
     },
     {
       "id": 2,
@@ -144,6 +181,36 @@
       "startDate": "2026-02-15T09:30:00",
       "endDate": null,
       "status": "ACTIVE"
+    },
+    {
+      "id": 3,
+      "idUserUnit": 3,
+      "idBuilding": 1,
+      "idUnit": 1,
+      "idUser": 1,
+      "startDate": "2026-01-01T08:00:00",
+      "endDate": null,
+      "status": "ACTIVE"
+    },
+    {
+      "id": 4,
+      "idUserUnit": 4,
+      "idBuilding": 1,
+      "idUnit": 1,
+      "idUser": 4,
+      "startDate": "2026-01-01T08:00:00",
+      "endDate": null,
+      "status": "ACTIVE"
+    },
+    {
+      "id": 5,
+      "idUserUnit": 5,
+      "idBuilding": 2,
+      "idUnit": 3,
+      "idUser": 5,
+      "startDate": "2026-01-01T08:00:00",
+      "endDate": null,
+      "status": "ACTIVE"
     }
   ],
   "commonAreas": [
@@ -152,7 +219,7 @@
       "name": "Piscina principal Mayor",
       "type": "POOL",
       "status": "AVAILABLE",
-      "maxCapacity": 10,
+      "maxCapacity": 11,
       "bookingType": "SHARED",
       "rules": {
         "maxReservationHours": 2,
