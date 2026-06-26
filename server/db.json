@@ -385,7 +385,7 @@
       "reservationDate": "2026-06-25",
       "timeSlot": 9,
       "numberOfGuests": 4,
-      "status": "ACTIVE",
+      "status": "REJECTED",
       "qrCodeAccess": "8b7c6f20-1111-4444-9999-abc123456789",
       "penaltyApplied": false
     },

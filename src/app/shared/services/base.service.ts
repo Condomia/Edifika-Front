@@ -43,6 +43,11 @@ export abstract class BaseService<T> {
       .pipe(retry(2), catchError(this.handleError));
   }
 
+  public patch(id: number | string, payload: Partial<T>): Observable<T> {
+    return this.http.patch<T>(`${this.resourcePath()}/${id}`, payload, this.httpOptions)
+      .pipe(retry(2), catchError(this.handleError));
+  }
+
   public delete(id: number | string): Observable<void> {
     return this.http.delete<void>(`${this.resourcePath()}/${id}`, this.httpOptions)
       .pipe(retry(2), catchError(this.handleError));

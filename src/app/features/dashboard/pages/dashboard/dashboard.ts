@@ -130,4 +130,13 @@ export class Dashboard implements OnInit {
       this.communityPosts = posts.slice(0, 5);
     });
   }
+
+  updateReservationStatus(id: number | string, status: string): void {
+    this.reservationService.patch(id, { status } as any).subscribe({
+      next: () => {
+        this.loadReservations();
+      },
+      error: (err) => console.error('Error updating reservation status', err)
+    });
+  }
 }
