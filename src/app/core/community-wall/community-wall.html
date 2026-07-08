@@ -1,3 +1,99 @@
-<div class="page-container">
-  <h1>Bienvenido a Community Wall</h1>
+<div class="community-wall-wrapper page-container">
+  <div class="layout-grid">
+    
+    <!-- Left Column: Feed -->
+    <div class="feed-column">
+      
+      <!-- Create Post Box -->
+      <div class="card create-post-card">
+        <div class="create-input-wrapper">
+          <div class="avatar-circle small-avatar" style="background-color: #6C7A89; color: white;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>
+          </div>
+          <input type="text" class="create-input" placeholder="Share an update with residents..." [(ngModel)]="newPostContent" [disabled]="isSubmitting" />
+        </div>
+        
+        @if (newPostImageBase64) {
+          <div class="image-preview-wrapper" style="position: relative; margin: 12px 0 12px 48px; border-radius: 8px; overflow: hidden; display: inline-block;">
+            <img [src]="newPostImageBase64" alt="Preview" style="max-height: 200px; max-width: 100%; border-radius: 8px; display: block;" />
+            <button class="btn-remove-image" (click)="removeImage()" style="position: absolute; top: 8px; right: 8px; background: rgba(0,0,0,0.6); color: white; border: none; border-radius: 50%; width: 24px; height: 24px; cursor: pointer; display: flex; align-items: center; justify-content: center;">&times;</button>
+          </div>
+        }
+
+        <div class="create-actions">
+          <div class="action-buttons">
+            <input type="file" #fileInput hidden (change)="onFileSelected($event)" accept="image/*" />
+            <button class="btn-action" (click)="fileInput.click()">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><circle cx="8.5" cy="8.5" r="1.5"></circle><polyline points="21 15 16 10 5 21"></polyline></svg>
+              Photo
+            </button>
+          </div>
+          <button class="btn-purple" (click)="submitPost()" [disabled]="isSubmitting || (!newPostContent.trim() && !newPostImageBase64)">
+            {{ isSubmitting ? 'Posting...' : 'Post' }}
+          </button>
+        </div>
+      </div>
+
+      <!-- Feed -->
+      <div class="posts-feed">
+        @for (post of posts; track post.id) {
+          <div class="card post-card">
+            
+            <div class="post-header">
+              @if (post.isAnnouncement) {
+                <div class="avatar-icon-square purple-bg-light">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#8A0B80" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path></svg>
+                </div>
+              } @else {
+                <img [src]="post.authorAvatar" alt="Avatar" class="avatar-img" />
+              }
+              
+              <div class="header-info">
+                <span class="author-name font-bold">{{ post.authorName }}</span>
+                <span class="author-meta text-gray small-text">{{ post.authorUnit }} &bull; {{ post.timeAgo }}</span>
+              </div>
+
+              @if (post.isAnnouncement) {
+                <span class="badge badge-event">EVENT</span>
+              } @else {
+                <button class="more-btn">
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#888" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>
+                </button>
+              }
+            </div>
+
+            <div class="post-body">
+              <h3 class="post-title">{{ post.title }}</h3>
+              
+              <p class="post-content text-gray">{{ post.content }}</p>
+              
+              @if (post.hasAttachedImage && post.attachedImageUrl) {
+                <img [src]="post.attachedImageUrl" alt="Post attachment" class="post-attachment" />
+              }
+            </div>
+
+          </div>
+        }
+      </div>
+
+    </div>
+
+    <!-- Right Column: Sidebar -->
+    <div class="sidebar-column">
+      <div class="card guidelines-card">
+        <h4 class="sidebar-title">COMMUNITY GUIDELINES</h4>
+        <ul class="guidelines-list">
+          <li>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
+            Code of Conduct
+          </li>
+          <li>
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+            Posting Rules
+          </li>
+        </ul>
+      </div>
+    </div>
+    
+  </div>
 </div>

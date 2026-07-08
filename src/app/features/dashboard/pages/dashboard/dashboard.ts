@@ -41,8 +41,16 @@ export class Dashboard implements OnInit {
   pendingReservations: any[] = [];
   communityPosts: any[] = [];
 
+  selectedPeriod = '6';
+  chartLabels: string[] = [];
+  monthlyRevenue: { month: string, amount: number }[] = [];
+  maxRevenue = 0;
+  allPayments: any[] = [];
+  allDebts: any[] = [];
+
   ngOnInit(): void {
     this.currentUser = this.loginService.getCurrentUser();
+    this.generateChartLabels();
     this.loadOccupancy();
     this.loadFinancials();
     this.loadReservations();
@@ -75,11 +83,15 @@ export class Dashboard implements OnInit {
       const unitIds = units.map(u => u.idUnit || u.id);
       
       const filteredDebts = debts.filter(d => unitIds.includes(d.unitId));
+      this.allDebts = filteredDebts;
       const debtIds = filteredDebts.map(d => d.id);
       
       const filteredPayments = payments.filter(p => debtIds.includes(p.debtId));
+      this.allPayments = filteredPayments;
 
-      this.totalCollected = filteredPayments.reduce((sum, p) => sum + Number(p.amount), 0);
+      this.totalCollected = filteredPayments
+        .filter(p => p.status === 'PAID')
+        .reduce((sum, p) => sum + Number(p.amount), 0);
 
       const pendingDebts = filteredDebts.filter(d => d.status === 'PENDING');
       this.pendingDebtsCount = pendingDebts.length;
@@ -91,6 +103,8 @@ export class Dashboard implements OnInit {
       this.delinquencyRate = totalExpected
         ? Number(((totalDebt / totalExpected) * 100).toFixed(1))
         : 0;
+
+      this.generateChartLabels();
     });
   }
 
@@ -138,5 +152,40 @@ export class Dashboard implements OnInit {
       },
       error: (err) => console.error('Error updating reservation status', err)
     });
+  }
+
+  setPeriod(period: string) {
+    this.selectedPeriod = period;
+    this.generateChartLabels();
+  }
+
+  generateChartLabels() {
+    const monthlyMap = new Map<string, number>();
+    
+    this.allPayments.forEach(p => {
+      if (p.status === 'PAID') {
+        const d = new Date(p.paymentDate);
+        const monthName = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
+        monthlyMap.set(monthName, (monthlyMap.get(monthName) || 0) + p.amount);
+      }
+    });
+
+    const monthsCount = parseInt(this.selectedPeriod, 10);
+    const labels = [];
+    const d = new Date();
+    for (let i = monthsCount - 1; i >= 0; i--) {
+      const pastDate = new Date(d.getFullYear(), d.getMonth() - i, 1);
+      labels.push(pastDate.toLocaleString('en-US', { month: 'short' }).toUpperCase());
+    }
+    
+    this.chartLabels = labels;
+    
+    this.monthlyRevenue = labels.map(m => ({
+      month: m,
+      amount: monthlyMap.get(m) || 0
+    }));
+
+    this.maxRevenue = Math.max(...this.monthlyRevenue.map(m => m.amount));
+    if (this.maxRevenue === 0) this.maxRevenue = 100000;
   }
 }

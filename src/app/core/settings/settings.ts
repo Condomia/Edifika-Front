@@ -24,6 +24,7 @@ export class Settings implements OnInit {
   buildingInfo: Partial<Building> = {};
 
   isEditingUser = false;
+  selectedTab: 'profile' | 'property' = 'profile';
   
   ngOnInit(): void {
     this.currentUser = this.loginService.getCurrentUser();

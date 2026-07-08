@@ -57,20 +57,30 @@
         <div class="fin-header">
           <div>
             <h2 class="card-title">Financial Performance</h2>
-            <p class="text-gray subtitle-text">Monthly Delinquency Rate Comparison</p>
+            <p class="text-gray subtitle-text">Monthly Collections Overview</p>
           </div>
           <div class="toggle-btns">
-            <button class="active">6 Months</button>
-            <button>Yearly</button>
+            <button [class.active]="selectedPeriod === '1'" (click)="setPeriod('1')">1M</button>
+            <button [class.active]="selectedPeriod === '3'" (click)="setPeriod('3')">3M</button>
+            <button [class.active]="selectedPeriod === '6'" (click)="setPeriod('6')">6M</button>
+            <button [class.active]="selectedPeriod === '12'" (click)="setPeriod('12')">1Y</button>
           </div>
         </div>
         
         <div class="chart-container">
-          <div class="chart-area">
-            <!-- Chart goes here -->
+          <div class="chart-area bars-container">
+            @for (data of monthlyRevenue; track data.month) {
+              <div class="bar-wrapper">
+                <div class="bar" [style.height.%]="(data.amount / maxRevenue) * 100">
+                  <div class="chart-tooltip">{{ data.amount | currency }}</div>
+                </div>
+              </div>
+            }
           </div>
           <div class="x-axis-labels text-gray">
-            <span>MAY</span><span>JUN</span><span>JUL</span><span>AUG</span><span>SEP</span><span>OCT</span>
+            @for (label of chartLabels; track label) {
+              <span style="flex: 1; text-align: center;">{{ label }}</span>
+            }
           </div>
         </div>
         
