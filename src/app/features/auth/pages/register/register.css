@@ -123,6 +123,131 @@ html, body {
   cursor: pointer;
 }
 
+.terms-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 14px 16px;
+  border: 1px solid #e8d9eb;
+  border-radius: 12px;
+  background: #fcf7fd;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  font-size: 14px;
+  color: #4f3b4d;
+  line-height: 1.5;
+}
+
+.checkbox-row input {
+  margin-top: 3px;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  color: #97009a;
+  font-weight: 700;
+  padding: 0;
+  cursor: pointer;
+  text-align: left;
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(17, 24, 39, 0.65);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 24px;
+  z-index: 1000;
+}
+
+.modal-card {
+  width: min(920px, 100%);
+  max-height: min(85vh, 900px);
+  overflow-y: auto;
+  background: white;
+  border-radius: 18px;
+  box-shadow: 0 20px 60px rgba(0,0,0,0.25);
+  padding: 24px;
+  box-sizing: border-box;
+}
+
+.modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+
+.modal-kicker {
+  margin: 0 0 4px 0;
+  text-transform: uppercase;
+  letter-spacing: 0.2em;
+  color: #97009a;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.modal-header h2 {
+  margin: 0;
+  color: #211821;
+  font-size: 24px;
+}
+
+.close-button {
+  border: none;
+  background: #f5eef7;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  font-size: 24px;
+  color: #6f4c6f;
+  cursor: pointer;
+}
+
+.modal-content {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+}
+
+.modal-intro {
+  margin: 0;
+  color: #5f4b5c;
+  font-size: 15px;
+  line-height: 1.6;
+}
+
+.rules-sections {
+  border: 1px solid #eadfea;
+  border-radius: 12px;
+  padding: 16px 18px;
+  background: #fcfbfd;
+}
+
+.rules-sections h3 {
+  margin: 0 0 10px 0;
+  color: #8b088f;
+  font-size: 16px;
+}
+
+.rules-sections ul {
+  margin: 0;
+  padding-left: 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: #4f3b4d;
+  line-height: 1.5;
+}
+
 .register-button {
   margin-top: 24px;
   border: none;

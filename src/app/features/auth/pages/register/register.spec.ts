@@ -20,4 +20,11 @@ describe('Register', () => {
   it('should create', () => {
     expect(component).toBeTruthy();
   });
+
+  it('should require acceptance of the building terms before registration', () => {
+    const acceptTermsControl = component.registerForm.get('acceptTerms');
+
+    expect(acceptTermsControl).toBeTruthy();
+    expect(acceptTermsControl?.hasError('requiredTrue')).toBeTrue();
+  });
 });

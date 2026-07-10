@@ -81,19 +81,44 @@
     <!-- Right Column: Sidebar -->
     <div class="sidebar-column">
       <div class="card guidelines-card">
-        <h4 class="sidebar-title">COMMUNITY GUIDELINES</h4>
+        <h4 class="sidebar-title">COMUNIDAD Y REGLAMENTO</h4>
         <ul class="guidelines-list">
           <li>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect><line x1="8" y1="21" x2="16" y2="21"></line><line x1="12" y1="17" x2="12" y2="21"></line></svg>
-            Code of Conduct
+            <button type="button" class="sidebar-link" (click)="openRulesModal()">Ver reglamento interno</button>
           </li>
           <li>
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#666" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
-            Posting Rules
+            <span>Normas de conducta para publicaciones y reservas</span>
           </li>
         </ul>
       </div>
     </div>
     
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showRulesModal" (click)="closeRulesModal()">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="community-rules-title" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <p class="modal-kicker">Comunidad Edifika</p>
+        <h2 id="community-rules-title">Reglamento interno y políticas de convivencia</h2>
+      </div>
+      <button type="button" class="close-button" (click)="closeRulesModal()" aria-label="Cerrar reglamento">×</button>
+    </div>
+
+    <div class="modal-content">
+      <p class="modal-intro">
+        Estas políticas están diseñadas para mantener un entorno ordenado, seguro y respetuoso para todos los residentes.
+      </p>
+
+      <div class="rules-sections" *ngFor="let section of buildingRulesSections">
+        <h3>{{ section.title }}</h3>
+        <ul>
+          <li *ngFor="let item of section.items">{{ item }}</li>
+        </ul>
+      </div>
+    </div>
   </div>
 </div>

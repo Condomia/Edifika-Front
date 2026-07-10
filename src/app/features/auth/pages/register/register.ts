@@ -4,7 +4,8 @@ import { Router } from '@angular/router';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 
 import { SignUpResource } from '../../models/sign-up-resource.model';
-import {RegisterService} from '../../services/register-service';
+import { RegisterService } from '../../services/register-service';
+import { BUILDING_RULES_SECTIONS } from '../../../../shared/constants/building-rules-content';
 
 @Component({
   selector: 'app-register',
@@ -21,6 +22,8 @@ export class Register {
   isLoading = false;
   errorMessage = '';
   successMessage = '';
+  showRulesModal = false;
+  readonly buildingRulesSections = BUILDING_RULES_SECTIONS;
 
   registerForm = this.formBuilder.group({
     fullName: ['', Validators.required],
@@ -28,8 +31,17 @@ export class Register {
     password: ['', Validators.required],
     phone: ['', Validators.required],
     documentType: ['DNI', Validators.required],
-    documentNumber: ['', Validators.required]
+    documentNumber: ['', Validators.required],
+    acceptTerms: [false, Validators.requiredTrue]
   });
+
+  openRulesModal(): void {
+    this.showRulesModal = true;
+  }
+
+  closeRulesModal(): void {
+    this.showRulesModal = false;
+  }
 
   register(): void {
     if (this.registerForm.invalid) {

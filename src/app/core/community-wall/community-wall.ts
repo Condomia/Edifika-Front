@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
 import { environment } from '../../../environments/environment.development';
+import { BUILDING_RULES_SECTIONS } from '../../shared/constants/building-rules-content';
 
 interface Post {
   id: number;
@@ -47,6 +48,8 @@ export class CommunityWall implements OnInit {
   newPostContent: string = '';
   newPostImageBase64: string | null = null;
   isSubmitting: boolean = false;
+  showRulesModal = false;
+  readonly buildingRulesSections = BUILDING_RULES_SECTIONS;
 
   ngOnInit() {
     this.fetchData();
@@ -105,6 +108,14 @@ export class CommunityWall implements OnInit {
     if (diffMins < 60) return `${diffMins || 1} mins ago`;
     if (diffHours < 24) return `${diffHours} hours ago`;
     return `${diffDays} days ago`;
+  }
+
+  openRulesModal(): void {
+    this.showRulesModal = true;
+  }
+
+  closeRulesModal(): void {
+    this.showRulesModal = false;
   }
 
   onFileSelected(event: any) {

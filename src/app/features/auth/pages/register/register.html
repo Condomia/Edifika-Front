@@ -56,6 +56,18 @@
           <input type="text" formControlName="documentNumber" placeholder="12345678">
         </div>
 
+        <div class="terms-box">
+          <label class="checkbox-row">
+            <input type="checkbox" formControlName="acceptTerms" />
+            <span>
+              Acepto el reglamento interno, las normas del foro vecinal, las políticas de áreas comunes y las condiciones de uso del edificio.
+            </span>
+          </label>
+          <button type="button" class="link-button" (click)="openRulesModal()">
+            Ver reglamento completo
+          </button>
+        </div>
+
         <p class="error-message" *ngIf="errorMessage">
           {{ errorMessage }}
         </p>
@@ -82,6 +94,31 @@
 
     <div class="credits">
       <p>© 2026 EDIFIKA RESIDENTIAL PLATFORM</p>
+    </div>
+  </div>
+</div>
+
+<div class="modal-backdrop" *ngIf="showRulesModal" (click)="closeRulesModal()">
+  <div class="modal-card" role="dialog" aria-modal="true" aria-labelledby="rules-title" (click)="$event.stopPropagation()">
+    <div class="modal-header">
+      <div>
+        <p class="modal-kicker">Registro de residente</p>
+        <h2 id="rules-title">Reglamento interno y normas de la comunidad</h2>
+      </div>
+      <button type="button" class="close-button" (click)="closeRulesModal()" aria-label="Cerrar reglamento">×</button>
+    </div>
+
+    <div class="modal-content">
+      <p class="modal-intro">
+        Por favor, revisa este documento antes de continuar. Al marcar la casilla aceptas cumplir con estas reglas y políticas del edificio.
+      </p>
+
+      <div class="rules-sections" *ngFor="let section of buildingRulesSections">
+        <h3>{{ section.title }}</h3>
+        <ul>
+          <li *ngFor="let item of section.items">{{ item }}</li>
+        </ul>
+      </div>
     </div>
   </div>
 </div>
