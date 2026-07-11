@@ -7,7 +7,6 @@ import {
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
-
 import {
   FormBuilder,
   FormGroup,
@@ -15,18 +14,18 @@ import {
   Validators
 } from '@angular/forms';
 
+import { forkJoin } from 'rxjs';
+
 import { Unit } from '../../model/unit.model';
+import { Building } from '../../model/building.model';
 import { User } from '../../../users/model/user.model';
 import { UserUnit } from '../../model/user-unit.model';
+import { CreateUnitResource } from '../../model/create-unit-resource.model';
 
 import { UnitsService } from '../../services/units.service';
-
-import { UserUnitsService } from
-    '../../services/user-units.service';
-
-import { UsersService } from
-    '../../../users/services/users.service';
-import {CreateUnitResource} from '../../model/create-unit-resource.model';
+import { BuildingsService } from '../../services/buildings.service';
+import { UserUnitsService } from '../../services/user-units.service';
+import { UsersService } from '../../../users/services/users.service';
 
 @Component({
   selector: 'app-unit-form',
@@ -47,24 +46,37 @@ export class UnitFormComponent implements OnInit {
   unitForm!: FormGroup;
 
   owners: User[] = [];
+  buildings: Building[] = [];
 
   isSubmitting = false;
+  isLoadingData = false;
   errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
     private unitsService: UnitsService,
+    private buildingsService: BuildingsService,
     private userUnitsService: UserUnitsService,
     private usersService: UsersService
   ) {}
 
   ngOnInit(): void {
     this.buildForm();
-    this.loadOwners();
+    this.loadFormData();
   }
 
   buildForm(): void {
+    const currentBuildingId =
+      this.unit?.idBuilding && this.unit.idBuilding > 0
+        ? this.unit.idBuilding
+        : null;
+
     this.unitForm = this.fb.group({
+      idBuilding: [
+        currentBuildingId,
+        Validators.required
+      ],
+
       unitNumber: [
         this.unit?.unitNumber ?? 0,
         [
@@ -118,28 +130,52 @@ export class UnitFormComponent implements OnInit {
         Validators.required
       ],
 
-      idUser: ['']
+      idUser: [null]
     });
   }
 
-  loadOwners(): void {
-    this.usersService.getAll().subscribe({
-      next: users => {
+  loadFormData(): void {
+    this.isLoadingData = true;
+    this.errorMessage = '';
+
+    forkJoin({
+      users: this.usersService.getAll(),
+      buildings: this.buildingsService.getAll()
+    }).subscribe({
+      next: ({ users, buildings }) => {
         this.owners = users.filter(user =>
           user.roles?.some(
             role => role.toUpperCase() === 'OWNER'
           )
         );
+
+        this.buildings = buildings;
+
+        /*
+         * Si solo existe un edificio, se selecciona automáticamente.
+         */
+        if (
+          this.isCreateMode &&
+          this.buildings.length === 1
+        ) {
+          this.unitForm.patchValue({
+            idBuilding: this.buildings[0].idBuilding
+          });
+        }
+
+        this.isLoadingData = false;
       },
 
       error: error => {
         console.error(
-          'Error loading owners:',
+          'Error loading unit form information:',
           error
         );
 
         this.errorMessage =
-          'No se pudieron cargar los propietarios.';
+          'No se pudieron cargar los edificios o propietarios.';
+
+        this.isLoadingData = false;
       }
     });
   }
@@ -165,7 +201,7 @@ export class UnitFormComponent implements OnInit {
     const formValue = this.unitForm.getRawValue();
 
     const resource: CreateUnitResource = {
-      idBuilding: Number(this.unit?.idBuilding ?? 1),
+      idBuilding: Number(formValue.idBuilding),
       unitNumber: Number(formValue.unitNumber),
       floor: Number(formValue.floor),
       coveredArea: Number(formValue.coveredArea),
@@ -179,9 +215,15 @@ export class UnitFormComponent implements OnInit {
       status: formValue.status
     };
 
+    console.log(
+      'Creating unit with body:',
+      resource
+    );
+
     this.unitsService.createUnit(resource).subscribe({
       next: createdUnit => {
-        const selectedOwnerId = Number(formValue.idUser);
+        const selectedOwnerId =
+          Number(formValue.idUser);
 
         if (selectedOwnerId <= 0) {
           this.finish();
@@ -196,10 +238,15 @@ export class UnitFormComponent implements OnInit {
       },
 
       error: error => {
-        console.error('Error creating unit:', error);
+        console.error(
+          'Error creating unit:',
+          error
+        );
 
         this.errorMessage =
-          'No se pudo crear la unidad. Verifica tus permisos.';
+          error?.status === 403
+            ? 'No tienes autorización para crear unidades.'
+            : 'No se pudo crear la unidad. Verifica los datos ingresados.';
 
         this.isSubmitting = false;
       }
@@ -248,27 +295,18 @@ export class UnitFormComponent implements OnInit {
 
     const updatedUnit: Unit = {
       ...this.unit,
-
-      unitNumber:
-        Number(formValue.unitNumber),
-
-      floor:
-        Number(formValue.floor),
-
-      coveredArea:
-        Number(formValue.coveredArea),
-
-      totalArea:
-        Number(formValue.totalArea),
-
-      participationPercentage:
-        Number(formValue.participationPercentage),
-
-      distributionPercentage:
-        Number(formValue.distributionPercentage),
-
-      status:
-      formValue.status
+      idBuilding: Number(formValue.idBuilding),
+      unitNumber: Number(formValue.unitNumber),
+      floor: Number(formValue.floor),
+      coveredArea: Number(formValue.coveredArea),
+      totalArea: Number(formValue.totalArea),
+      participationPercentage: Number(
+        formValue.participationPercentage
+      ),
+      distributionPercentage: Number(
+        formValue.distributionPercentage
+      ),
+      status: formValue.status
     };
 
     const unitId =

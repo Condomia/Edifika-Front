@@ -32,10 +32,60 @@
       (ngSubmit)="onSubmit()"
       class="form-body">
 
+      <p
+        class="form-help"
+        *ngIf="isLoadingData">
+        Loading buildings and owners...
+      </p>
+
       <div class="form-grid">
 
+        <!-- Edificio -->
         <div class="form-group">
-          <label for="unitNumber">Unit Number</label>
+          <label for="idBuilding">
+            Building
+          </label>
+
+          <select
+            id="idBuilding"
+            formControlName="idBuilding">
+
+            <option [ngValue]="null">
+              Select a building
+            </option>
+
+            <option
+              *ngFor="let building of buildings"
+              [ngValue]="building.idBuilding">
+
+              {{ building.name }} — {{ building.district }}
+            </option>
+          </select>
+
+          <small
+            class="error-text"
+            *ngIf="
+              unitForm.get('idBuilding')?.invalid &&
+              unitForm.get('idBuilding')?.touched
+            ">
+            You must select a building.
+          </small>
+
+          <small
+            class="empty-message"
+            *ngIf="
+              !isLoadingData &&
+              buildings.length === 0
+            ">
+            No buildings are available. Create a building first.
+          </small>
+        </div>
+
+        <!-- Número -->
+        <div class="form-group">
+          <label for="unitNumber">
+            Unit Number
+          </label>
 
           <input
             id="unitNumber"
@@ -53,8 +103,11 @@
           </small>
         </div>
 
+        <!-- Piso -->
         <div class="form-group">
-          <label for="floor">Floor</label>
+          <label for="floor">
+            Floor
+          </label>
 
           <input
             id="floor"
@@ -72,8 +125,11 @@
           </small>
         </div>
 
+        <!-- Área cubierta -->
         <div class="form-group">
-          <label for="coveredArea">Covered Area</label>
+          <label for="coveredArea">
+            Covered Area
+          </label>
 
           <input
             id="coveredArea"
@@ -92,8 +148,11 @@
           </small>
         </div>
 
+        <!-- Área total -->
         <div class="form-group">
-          <label for="totalArea">Total Area</label>
+          <label for="totalArea">
+            Total Area
+          </label>
 
           <input
             id="totalArea"
@@ -112,6 +171,7 @@
           </small>
         </div>
 
+        <!-- Participación -->
         <div class="form-group">
           <label for="participationPercentage">
             Participation %
@@ -134,6 +194,7 @@
           </small>
         </div>
 
+        <!-- Distribución -->
         <div class="form-group">
           <label for="distributionPercentage">
             Distribution %
@@ -156,39 +217,52 @@
           </small>
         </div>
 
+        <!-- Estado -->
         <div class="form-group">
-          <label for="status">Status</label>
+          <label for="status">
+            Status
+          </label>
 
           <select
             id="status"
             formControlName="status">
 
-            <option value="AVAILABLE">AVAILABLE</option>
-            <option value="OCCUPIED">OCCUPIED</option>
-            <option value="MAINTENANCE">MAINTENANCE</option>
+            <option value="AVAILABLE">
+              AVAILABLE
+            </option>
+
+            <option value="OCCUPIED">
+              OCCUPIED
+            </option>
+
+            <option value="MAINTENANCE">
+              MAINTENANCE
+            </option>
           </select>
         </div>
 
-        <!-- Solo se muestra al crear la unidad -->
+        <!-- Propietario -->
         <div
           class="form-group"
           *ngIf="isCreateMode">
 
-          <label for="idUser">Owner</label>
+          <label for="idUser">
+            Owner
+          </label>
 
           <select
             id="idUser"
             formControlName="idUser">
 
-            <option value="">
+            <option [ngValue]="null">
               No Owner Assigned
             </option>
 
             <option
               *ngFor="let owner of owners"
-              [value]="owner.id">
+              [ngValue]="owner.id">
 
-              {{ owner.fullName }} - {{ owner.email }}
+              {{ owner.fullName }} — {{ owner.email }}
             </option>
           </select>
 
@@ -198,24 +272,27 @@
 
           <small
             class="empty-message"
-            *ngIf="owners.length === 0">
-
-            No active owners are available.
+            *ngIf="
+              !isLoadingData &&
+              owners.length === 0
+            ">
+            No owners are available.
           </small>
         </div>
       </div>
 
       <p
         class="error-text general-error"
-        *ngIf="unitForm.invalid && unitForm.touched">
-
+        *ngIf="
+          unitForm.invalid &&
+          unitForm.touched
+        ">
         Please verify the entered values.
       </p>
 
       <p
         class="error-text general-error"
         *ngIf="errorMessage">
-
         {{ errorMessage }}
       </p>
 
@@ -232,7 +309,12 @@
         <button
           type="submit"
           class="btn primary"
-          [disabled]="unitForm.invalid || isSubmitting">
+          [disabled]="
+            unitForm.invalid ||
+            isSubmitting ||
+            isLoadingData ||
+            buildings.length === 0
+          ">
 
           {{
             isSubmitting

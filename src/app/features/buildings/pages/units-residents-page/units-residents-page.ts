@@ -186,7 +186,7 @@ export class UnitsResidentsPage implements OnInit {
     this.selectedUnit = {
       id: 0,
       idUnit: 0,
-      idBuilding: 1,
+      idBuilding: 0,
       unitNumber: 0,
       floor: 0,
       coveredArea: 0,
