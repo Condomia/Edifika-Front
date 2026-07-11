@@ -42,15 +42,34 @@ export class Login {
     this.errorMessage = '';
 
     const resource: SignInResource = {
-      email: this.loginForm.value.email ?? '',
+      email: this.loginForm.value.email?.trim() ?? '',
       password: this.loginForm.value.password ?? ''
     };
 
     this.loginService.signIn(resource).subscribe({
-      next: () => {
+      next: (response: any) => {
         this.isLoading = false;
+
+        const roles: string[] =
+          response?.roles ??
+          response?.user?.roles ??
+          [];
+
+        const isAdmin = roles.some(
+          role => role.toUpperCase() === 'ADMIN'
+        );
+
+        if (!isAdmin) {
+          this.errorMessage =
+            'Acceso restringido. Solo los administradores pueden ingresar.';
+
+          this.loginService.logout?.();
+          return;
+        }
+
         this.router.navigate(['/app/dashboard']);
       },
+
       error: () => {
         this.isLoading = false;
         this.errorMessage = 'Email o contraseña incorrectos.';
