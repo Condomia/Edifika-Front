@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment.development';
+import { environment } from '../../../environments/environment.production';
 import { BUILDING_RULES_SECTIONS } from '../../shared/constants/building-rules-content';
 
 interface Post {
@@ -62,7 +62,7 @@ export class CommunityWall implements OnInit {
       this.http.get<UserUnit[]>(`${this.baseUrl}/userUnits`).toPromise(),
       this.http.get<Unit[]>(`${this.baseUrl}/units`).toPromise()
     ]).then(([rawPosts = [], users = [], userUnits = [], units = []]) => {
-      
+
       const sortedPosts = rawPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       this.posts = sortedPosts.map(p => {
@@ -71,7 +71,7 @@ export class CommunityWall implements OnInit {
         const unit = userUnit ? units.find(u => u.id === userUnit.idUnit) : null;
 
         const isAnnouncement = p.title.toLowerCase().includes('mantenimiento') || p.title.toLowerCase().includes('official');
-        
+
         let authorName = user ? user.fullName : 'Unknown Resident';
         let authorAvatar = p.imageUrl || 'https://i.pravatar.cc/150?u=default';
         let authorUnit = unit ? `Unit ${unit.unitNumber}` : 'Management';
@@ -135,9 +135,9 @@ export class CommunityWall implements OnInit {
 
   submitPost() {
     if (!this.newPostContent.trim() && !this.newPostImageBase64) return;
-    
+
     this.isSubmitting = true;
-    
+
     const newPost = {
       title: 'New Update',
       content: this.newPostContent,

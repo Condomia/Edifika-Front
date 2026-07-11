@@ -454,6 +454,23 @@
       "status": "PENDING"
     }
   ],
+  "notifications": [
+    {
+      "id": 1,
+      "userId": 1,
+      "title": "Pago pendiente",
+      "content": "Tiene una deuda pendiente correspondiente al mantenimiento.",
+      "read": false,
+      "createdAt": "2026-07-10T20:00:00"
+    }
+  ],
+  "deviceTokens": [
+    {
+      "id": 1,
+      "userId": 1,
+      "token": "device-token-example-001"
+    }
+  ],
   "posts": [
     {
       "id": 1,
