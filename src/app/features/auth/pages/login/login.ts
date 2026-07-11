@@ -20,12 +20,17 @@ export class Login {
 
   isLoading = false;
   errorMessage = '';
+  showPassword = false;
 
   loginForm = this.formBuilder.group({
-    email: ['admin@edifika.com', [Validators.required, Validators.email]],
-    password: ['admin123', Validators.required],
+    email: ['', [Validators.required, Validators.email]],
+    password: ['', Validators.required],
     remember: [false]
   });
+
+  togglePasswordVisibility(): void {
+    this.showPassword = !this.showPassword;
+  }
 
   login(): void {
     if (this.loginForm.invalid) {

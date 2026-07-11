@@ -1,5 +1,4 @@
-import { Component, OnInit } from '@angular/core';
-import { Calendar } from '../../features/reservations/pages/calendar/calendar';
+import { Component, OnInit, ViewChild } from '@angular/core';import { Calendar } from '../../features/reservations/pages/calendar/calendar';
 import { CommonAreaListComponent } from '../../features/reservations/components/common-area-list.component/common-area-list.component';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
@@ -28,6 +27,8 @@ export class CommonAreas implements OnInit {
 
   areaForm!: FormGroup;
   editForm!: FormGroup;
+  @ViewChild(CommonAreaListComponent)
+  commonAreaList!: CommonAreaListComponent;
 
   constructor(
     private fb: FormBuilder,
@@ -117,12 +118,14 @@ export class CommonAreas implements OnInit {
     this.commonAreaService.create(newArea).subscribe({
       next: () => {
         this.closeCreateModal();
-        window.location.reload();
+        this.refreshCommonAreas();
       },
       error: error => console.error(error)
     });
   }
-
+  private refreshCommonAreas(): void {
+    this.commonAreaList?.loadAreas();
+  }
   openEditModal(area: CommonArea): void {
     this.selectedArea = area;
 
@@ -185,7 +188,7 @@ export class CommonAreas implements OnInit {
     this.commonAreaService.update(this.selectedArea.id, updatedArea).subscribe({
       next: () => {
         this.closeEditModal();
-        window.location.reload();
+        this.refreshCommonAreas();
       },
       error: error => console.error(error)
     });
@@ -193,7 +196,8 @@ export class CommonAreas implements OnInit {
 
   updateAreaStatus(area: CommonArea): void {
     this.commonAreaService.update(area.id, area).subscribe({
-      next: () => window.location.reload(),
+      next: () =>   this.refreshCommonAreas()
+      ,
       error: error => console.error(error)
     });
   }

@@ -21,6 +21,18 @@ export class CommonAreaListComponent implements OnInit {
   ngOnInit(): void {
     this.commonAreaService.getAll().subscribe((areas) => {
       this.commonAreas = areas;
+      this.loadAreas();
+
+    });
+  }
+  loadAreas(): void {
+    this.commonAreaService.getAll().subscribe({
+      next: (areas) => {
+        this.commonAreas = areas;
+      },
+      error: (error) => {
+        console.error('Error loading common areas:', error);
+      }
     });
   }
   onEditRules(area: CommonArea) {
