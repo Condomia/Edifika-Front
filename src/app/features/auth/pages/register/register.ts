@@ -62,6 +62,7 @@ export class Register {
       phone: formValue.phone ?? '',
       documentType: formValue.documentType ?? 'DNI',
       documentNumber: formValue.documentNumber ?? '',
+      status: 'ACTIVE',
       roles: ['ADMIN']
     };
 

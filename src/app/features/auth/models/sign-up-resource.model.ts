@@ -5,5 +5,6 @@ export interface SignUpResource {
   phone: string;
   documentType: string;
   documentNumber: string;
+  status: string;
   roles: string[];
 }
