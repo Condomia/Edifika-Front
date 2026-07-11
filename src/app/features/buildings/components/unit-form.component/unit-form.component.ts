@@ -26,6 +26,7 @@ import { UserUnitsService } from
 
 import { UsersService } from
     '../../../users/services/users.service';
+import {CreateUnitResource} from '../../model/create-unit-resource.model';
 
 @Component({
   selector: 'app-unit-form',
@@ -162,69 +163,43 @@ export class UnitFormComponent implements OnInit {
 
   createUnit(): void {
     const formValue = this.unitForm.getRawValue();
-    const temporaryId = Date.now();
 
-    const newUnit: Unit = {
-      id: temporaryId,
-      idUnit: temporaryId,
-
-      idBuilding:
-        this.unit?.idBuilding ??
-        1,
-
-      unitNumber:
-        Number(formValue.unitNumber),
-
-      floor:
-        Number(formValue.floor),
-
-      coveredArea:
-        Number(formValue.coveredArea),
-
-      totalArea:
-        Number(formValue.totalArea),
-
-      participationPercentage:
-        Number(formValue.participationPercentage),
-
-      distributionPercentage:
-        Number(formValue.distributionPercentage),
-
-      status:
-      formValue.status
+    const resource: CreateUnitResource = {
+      idBuilding: Number(this.unit?.idBuilding ?? 1),
+      unitNumber: Number(formValue.unitNumber),
+      floor: Number(formValue.floor),
+      coveredArea: Number(formValue.coveredArea),
+      totalArea: Number(formValue.totalArea),
+      participationPercentage: Number(
+        formValue.participationPercentage
+      ),
+      distributionPercentage: Number(
+        formValue.distributionPercentage
+      ),
+      status: formValue.status
     };
 
-    this.unitsService.create(newUnit).subscribe({
+    this.unitsService.createUnit(resource).subscribe({
       next: createdUnit => {
-        const selectedOwnerId =
-          Number(formValue.idUser);
+        const selectedOwnerId = Number(formValue.idUser);
 
         if (selectedOwnerId <= 0) {
           this.finish();
           return;
         }
 
-        const createdUnitId = Number(
-          createdUnit?.idUnit ??
-          createdUnit?.id ??
-          newUnit.idUnit
-        );
-
         this.assignOwnerToUnit(
           selectedOwnerId,
-          createdUnitId,
-          newUnit.idBuilding
+          Number(createdUnit.idUnit),
+          Number(createdUnit.idBuilding)
         );
       },
 
       error: error => {
-        console.error(
-          'Error creating unit:',
-          error
-        );
+        console.error('Error creating unit:', error);
 
         this.errorMessage =
-          'No se pudo crear la unidad.';
+          'No se pudo crear la unidad. Verifica tus permisos.';
 
         this.isSubmitting = false;
       }

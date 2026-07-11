@@ -1,34 +1,31 @@
-import { Injectable, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Injectable } from '@angular/core';
+import { Observable, catchError } from 'rxjs';
 
 import { BaseService } from '../../../shared/services/base.service';
-import { Building } from '../model/building.model';
-import { Unit } from '../model/unit.model';
-import { UserUnit } from '../model/user-unit.model';
 import { environment } from '../../../../environments/environment';
+
+import { Building } from '../model/building.model';
+import { CreateBuildingResource } from '../model/create-building-resource.model';
 
 @Injectable({
   providedIn: 'root'
 })
 export class BuildingsService extends BaseService<Building> {
-  override http = inject(HttpClient);
-  override serverBaseUrl = environment.serverBaseUrl;
 
   constructor() {
     super();
     this.resourceEndpoint = environment.buildingEndpointPath;
   }
 
-  getUnitsByBuildingId(idBuilding: number): Observable<Unit[]> {
-    return this.http.get<Unit[]>(
-      `${this.serverBaseUrl}${environment.buildingEndpointPath}/${idBuilding}/units`
-    );
-  }
-
-  getResidentsByBuildingId(idBuilding: number): Observable<UserUnit[]> {
-    return this.http.get<UserUnit[]>(
-      `${this.serverBaseUrl}${environment.buildingEndpointPath}/${idBuilding}/residents`
+  createBuilding(
+    resource: CreateBuildingResource
+  ): Observable<Building> {
+    return this.http.post<Building>(
+      this.resourcePath(),
+      resource,
+      this.httpOptions
+    ).pipe(
+      catchError(this.handleError)
     );
   }
 }

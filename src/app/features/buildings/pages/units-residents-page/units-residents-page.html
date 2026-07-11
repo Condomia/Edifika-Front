@@ -10,14 +10,26 @@
         type="button"
         class="btn secondary"
         (click)="createUser()">
+
         Add New User
       </button>
 
       <button
+        type="button"
+        class="btn secondary"
+        (click)="createBuilding()">
+
+        Add New Building
+      </button>
+
+      <button
+        type="button"
         class="btn primary"
         (click)="createUnit()">
+
         Add New Unit
-      </button>    </div>
+      </button>
+    </div>
   </header>
 
   <section class="summary-grid">
@@ -105,14 +117,23 @@
   </section>
 </div>
 <app-unit-form
-  *ngIf="(isEditingUnit || isCreatingUnit) && selectedUnit"
+  *ngIf="
+    (isEditingUnit || isCreatingUnit) &&
+    selectedUnit
+  "
   [unit]="selectedUnit"
   [isCreateMode]="isCreatingUnit"
   (close)="onUnitFormClose($event)">
 </app-unit-form>
+
 <app-user-form
   *ngIf="isCreatingUser"
   [user]="null"
   [isCreateMode]="true"
   (close)="onUserFormClose($event)">
 </app-user-form>
+
+<app-building-form
+  *ngIf="isCreatingBuilding"
+  (close)="onBuildingFormClose($event)">
+</app-building-form>

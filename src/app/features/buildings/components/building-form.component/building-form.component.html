@@ -1,0 +1,168 @@
+<div
+  class="modal-backdrop"
+  (click)="onCancel()">
+
+  <div
+    class="modal-container"
+    (click)="$event.stopPropagation()">
+
+    <header class="modal-header">
+      <div>
+        <h2>Create Building</h2>
+        <p>
+          Register a new residential building in Edifika.
+        </p>
+      </div>
+
+      <button
+        type="button"
+        class="close-btn"
+        (click)="onCancel()"
+        [disabled]="isSubmitting">
+
+        ×
+      </button>
+    </header>
+
+    <form
+      [formGroup]="buildingForm"
+      (ngSubmit)="onSubmit()"
+      class="form-body">
+
+      <div class="form-group">
+        <label for="name">
+          Building Name
+        </label>
+
+        <input
+          id="name"
+          type="text"
+          formControlName="name"
+          placeholder="Example: Tower A"
+          [class.is-invalid]="
+            buildingForm.get('name')?.invalid &&
+            buildingForm.get('name')?.touched
+          ">
+
+        <small
+          class="error-text"
+          *ngIf="
+            buildingForm.get('name')?.invalid &&
+            buildingForm.get('name')?.touched
+          ">
+          Building name must contain at least 3 characters.
+        </small>
+      </div>
+
+      <div class="form-group">
+        <label for="address">
+          Address
+        </label>
+
+        <input
+          id="address"
+          type="text"
+          formControlName="address"
+          placeholder="Example: Av. Principal 123"
+          [class.is-invalid]="
+            buildingForm.get('address')?.invalid &&
+            buildingForm.get('address')?.touched
+          ">
+
+        <small
+          class="error-text"
+          *ngIf="
+            buildingForm.get('address')?.invalid &&
+            buildingForm.get('address')?.touched
+          ">
+          Enter a valid address.
+        </small>
+      </div>
+
+      <div class="form-grid">
+        <div class="form-group">
+          <label for="district">
+            District
+          </label>
+
+          <input
+            id="district"
+            type="text"
+            formControlName="district"
+            placeholder="Example: Miraflores"
+            [class.is-invalid]="
+              buildingForm.get('district')?.invalid &&
+              buildingForm.get('district')?.touched
+            ">
+
+          <small
+            class="error-text"
+            *ngIf="
+              buildingForm.get('district')?.invalid &&
+              buildingForm.get('district')?.touched
+            ">
+            Enter a valid district.
+          </small>
+        </div>
+
+        <div class="form-group">
+          <label for="city">
+            City
+          </label>
+
+          <input
+            id="city"
+            type="text"
+            formControlName="city"
+            placeholder="Example: Lima"
+            [class.is-invalid]="
+              buildingForm.get('city')?.invalid &&
+              buildingForm.get('city')?.touched
+            ">
+
+          <small
+            class="error-text"
+            *ngIf="
+              buildingForm.get('city')?.invalid &&
+              buildingForm.get('city')?.touched
+            ">
+            Enter a valid city.
+          </small>
+        </div>
+      </div>
+
+      <p
+        class="general-error"
+        *ngIf="errorMessage">
+
+        {{ errorMessage }}
+      </p>
+
+      <footer class="form-actions">
+        <button
+          type="button"
+          class="btn secondary"
+          (click)="onCancel()"
+          [disabled]="isSubmitting">
+
+          Cancel
+        </button>
+
+        <button
+          type="submit"
+          class="btn primary"
+          [disabled]="
+            buildingForm.invalid ||
+            isSubmitting
+          ">
+
+          {{
+            isSubmitting
+              ? 'Creating...'
+              : 'Create Building'
+          }}
+        </button>
+      </footer>
+    </form>
+  </div>
+</div>

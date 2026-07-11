@@ -28,6 +28,7 @@ import { UnitResidentView } from
 
 import { UnitFormComponent } from
     '../../components/unit-form.component/unit-form.component';
+import {BuildingFormComponent} from '../../components/building-form.component/building-form.component';
 
 @Component({
   selector: 'app-units-residents-page',
@@ -35,7 +36,8 @@ import { UnitFormComponent } from
   imports: [
     CommonModule,
     UnitFormComponent,
-    UserFormComponent
+    UserFormComponent,
+    BuildingFormComponent
   ],
   templateUrl: './units-residents-page.html',
   styleUrl: './units-residents-page.css',
@@ -50,7 +52,7 @@ export class UnitsResidentsPage implements OnInit {
   isCreatingUnit = false;
   isEditingUnit = false;
   isCreatingUser = false;
-
+  isCreatingBuilding = false;
   totalUnits = 0;
   outstandingDebt = 0;
   newMoveIns = 0;
@@ -65,7 +67,17 @@ export class UnitsResidentsPage implements OnInit {
   ngOnInit(): void {
     this.loadData();
   }
+  createBuilding(): void {
+    this.isCreatingBuilding = true;
+  }
 
+  onBuildingFormClose(refresh: boolean): void {
+    this.isCreatingBuilding = false;
+
+    if (refresh) {
+      this.loadData();
+    }
+  }
   loadData(): void {
     forkJoin({
       users: this.usersService.getAll(),
