@@ -74,18 +74,49 @@
     </div>
 
     <form (ngSubmit)="createReservation()">
-      <label>Resident</label>
-      <select [(ngModel)]="reservationForm.residentId" name="residentId" required>
-        <option value="" disabled selected>Select resident</option>
+      <label for="residentId">Resident</label>
 
-        <option *ngFor="let user of users" [value]="user.id">
-          {{ user.fullName }}
+      <select
+        id="residentId"
+        [(ngModel)]="reservationForm.residentId"
+        name="residentId"
+        required>
+
+        <option [ngValue]="null" disabled>
+          Select resident
+        </option>
+
+        <option
+          *ngFor="let user of users"
+          [ngValue]="user.id">
+
+          {{ user.fullName }} — {{ user.roles[0] }}
         </option>
       </select>
 
-      <label>Common Area</label>
-      <select [(ngModel)]="reservationForm.commonAreaId" name="commonAreaId" required>
-        <option *ngFor="let area of commonAreas" [value]="area.id">
+      <small
+        class="form-help"
+        *ngIf="users.length === 0">
+
+        No active residents are assigned to a unit.
+      </small>
+
+      <label for="commonAreaId">Common Area</label>
+
+      <select
+        id="commonAreaId"
+        [(ngModel)]="reservationForm.commonAreaId"
+        name="commonAreaId"
+        required>
+
+        <option [ngValue]="null" disabled>
+          Select common area
+        </option>
+
+        <option
+          *ngFor="let area of commonAreas"
+          [ngValue]="area.id">
+
           {{ area.name }}
         </option>
       </select>
