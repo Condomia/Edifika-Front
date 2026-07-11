@@ -1,6 +1,6 @@
 export interface UserUnit {
   id?: number;
-  idUserUnit: number;
+  idUserUnit?: number;
   idBuilding?: number;
   idUnit: number;
   idUser: number;

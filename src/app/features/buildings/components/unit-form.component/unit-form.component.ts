@@ -258,20 +258,16 @@ export class UnitFormComponent implements OnInit {
     unitId: number,
     buildingId: number
   ): void {
-    const relationId = Date.now();
-
     const newRelation: UserUnit = {
-      id: relationId,
-      idUserUnit: relationId,
       idBuilding: buildingId,
       idUnit: unitId,
       idUser: ownerId,
-      startDate: new Date().toISOString(),
+      startDate: new Date().toISOString().slice(0, 19),
       endDate: null,
       status: 'ACTIVE'
     };
 
-    this.userUnitsService.create(newRelation).subscribe({
+    this.userUnitsService.assignUserToUnit(newRelation).subscribe({
       next: () => {
         this.finish();
       },
@@ -291,48 +287,10 @@ export class UnitFormComponent implements OnInit {
   }
 
   updateUnit(): void {
-    const formValue = this.unitForm.getRawValue();
+    this.errorMessage =
+      'No existe endpoint backend para actualizar unidades.';
 
-    const updatedUnit: Unit = {
-      ...this.unit,
-      idBuilding: Number(formValue.idBuilding),
-      unitNumber: Number(formValue.unitNumber),
-      floor: Number(formValue.floor),
-      coveredArea: Number(formValue.coveredArea),
-      totalArea: Number(formValue.totalArea),
-      participationPercentage: Number(
-        formValue.participationPercentage
-      ),
-      distributionPercentage: Number(
-        formValue.distributionPercentage
-      ),
-      status: formValue.status
-    };
-
-    const unitId =
-      this.unit.id ??
-      this.unit.idUnit;
-
-    this.unitsService.update(
-      unitId,
-      updatedUnit
-    ).subscribe({
-      next: () => {
-        this.finish();
-      },
-
-      error: error => {
-        console.error(
-          'Error updating unit:',
-          error
-        );
-
-        this.errorMessage =
-          'No se pudo actualizar la unidad.';
-
-        this.isSubmitting = false;
-      }
-    });
+    this.isSubmitting = false;
   }
 
   finish(): void {

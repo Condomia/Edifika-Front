@@ -1,7 +1,7 @@
 export const environment = {
-  production: false,
+  production: true,
 
-  serverBaseUrl: 'https://edifika-apigateway.onrender.com/api/v1',
+  serverBaseUrl: 'http://localhost:8080/api/v1',
 
   authenticationEndpointPath: '/authentication',
   userEndpointPath: '/users',

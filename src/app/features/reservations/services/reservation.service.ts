@@ -4,6 +4,7 @@ import { Observable } from 'rxjs';
 
 import { BaseService } from '../../../shared/services/base.service';
 import { Reservation } from '../model/reservation.model';
+import { CreateReservationResource } from '../model/create-reservation-resource.model';
 import { environment } from '../../../../environments/environment';
 
 @Injectable({
@@ -18,17 +19,19 @@ export class ReservationService extends BaseService<Reservation> {
     this.resourceEndpoint = environment.reservationEndpointPath;
   }
 
-  createReservation(resource: Reservation): Observable<Reservation> {
+  createReservation(resource: CreateReservationResource): Observable<Reservation> {
     return this.http.post<Reservation>(
-      `${this.serverBaseUrl}${environment.reservationEndpointPath}`,
-      resource
+      this.resourcePath(),
+      resource,
+      this.httpOptions
     );
   }
 
   cancelReservation(reservationId: number | string): Observable<Reservation> {
     return this.http.post<Reservation>(
-      `${this.serverBaseUrl}${environment.reservationEndpointPath}/${reservationId}/cancelations`,
-      {}
+      `${this.resourcePath()}/${reservationId}/cancelations`,
+      {},
+      this.httpOptions
     );
   }
 
@@ -38,8 +41,8 @@ export class ReservationService extends BaseService<Reservation> {
       .set('date', date);
 
     return this.http.get<Record<number, number>>(
-      `${this.serverBaseUrl}${environment.reservationEndpointPath}/availability`,
-      { params }
+      `${this.resourcePath()}/availability`,
+      { ...this.httpOptions, params }
     );
   }
 }

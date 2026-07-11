@@ -2,8 +2,8 @@ import { Component, OnInit, inject } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { environment } from '../../../environments/environment.production';
+import { forkJoin, map, of, switchMap } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 interface Debt {
   id: number;
@@ -30,6 +30,7 @@ interface Payment {
 
 interface Unit {
   id: number;
+  idUnit?: number;
   idBuilding?: number;
   buildingId?: number;
   unitNumber: number | string;
@@ -55,18 +56,28 @@ interface User {
 
 interface Building {
   id: number;
+  idBuilding?: number;
   name: string;
 }
 
 interface AreaFinancialReport {
   idArea: number;
+  areaId?: number;
   areaName?: string;
   totalPagoGanadoPorArea: number;
+  totalCollected?: number;
   totalVecesReservadas: number;
+  totalReservations?: number;
 }
 
 interface FinancialReport {
   buildingId: number;
+
+  totalDebt?: number;
+  totalOverdueDebt?: number;
+  totalCollectedFromDebts?: number;
+  totalCollectedFromReservations?: number;
+  overdueRate?: number;
 
   deudaTotal?: number;
   deudaAtrasadaTotal?: number;
@@ -223,31 +234,55 @@ export class Finance implements OnInit {
       report: this.http.get<FinancialReport>(
         `${this.baseUrl}${this.reportPath}/financial/buildings/${buildingId}`
       ),
-
-      payments: this.http.get<Payment[]>(
-        `${this.baseUrl}/payments`
-      ),
-
-      debts: this.http.get<Debt[]>(
-        `${this.baseUrl}/payments/debts`
-      ),
-
       units: this.http.get<Unit[]>(
-        `${this.baseUrl}/residential/units`
+        `${this.baseUrl}/residential/buildings/${buildingId}/units`
       ),
-
       users: this.http.get<User[]>(
         `${this.baseUrl}/users`
       ),
-
       userUnits: this.http.get<UserUnit[]>(
-        `${this.baseUrl}/residential/user-units`
+        `${this.baseUrl}/residential/buildings/${buildingId}/residents`
       ),
-
       buildings: this.http.get<Building[]>(
         `${this.baseUrl}/residential/buildings`
       )
-    }).subscribe({
+    }).pipe(
+      switchMap(baseData => {
+        const debtRequests = baseData.units.map(unit =>
+          this.http.get<Debt[]>(
+            `${this.baseUrl}/payments/debts/unit/${this.getUnitId(unit)}`
+          )
+        );
+
+        const userIds = Array.from(
+          new Set(
+            baseData.userUnits
+              .map(userUnit => this.getUserUnitUserId(userUnit))
+              .filter(userId => userId > 0)
+          )
+        );
+
+        const paymentRequests = userIds.map(userId =>
+          this.http.get<Payment[]>(
+            `${this.baseUrl}/payments/user/${userId}`
+          )
+        );
+
+        return forkJoin({
+          report: of(baseData.report),
+          units: of(baseData.units),
+          users: of(baseData.users),
+          userUnits: of(baseData.userUnits),
+          buildings: of(baseData.buildings),
+          debts: debtRequests.length
+            ? forkJoin(debtRequests).pipe(map(groups => groups.flat()))
+            : of([] as Debt[]),
+          payments: paymentRequests.length
+            ? forkJoin(paymentRequests).pipe(map(groups => groups.flat()))
+            : of([] as Payment[])
+        });
+      })
+    ).subscribe({
       next: ({
                report,
                payments,
@@ -305,10 +340,10 @@ export class Finance implements OnInit {
     report: FinancialReport
   ): void {
     const paymentRevenue =
-      Number(report.dineroRecolectadoPorPagoDeuda ?? 0);
+      Number(report.totalCollectedFromDebts ?? report.dineroRecolectadoPorPagoDeuda ?? 0);
 
     const areaRevenue =
-      Number(report.dineroRecolectadoPorPagoDeAreas ?? 0);
+      Number(report.totalCollectedFromReservations ?? report.dineroRecolectadoPorPagoDeAreas ?? 0);
 
     this.totalRevenue = Number(
       report.totalRevenue ??
@@ -317,12 +352,14 @@ export class Finance implements OnInit {
 
     this.pendingDues = Number(
       report.pendingDues ??
+      report.totalDebt ??
       report.deudaTotal ??
       0
     );
 
     this.arrears = Number(
       report.arrears ??
+      report.totalOverdueDebt ??
       report.deudaAtrasadaTotal ??
       0
     );
@@ -352,7 +389,7 @@ export class Finance implements OnInit {
     );
 
     const buildingUnitIds = new Set(
-      buildingUnits.map(unit => Number(unit.id))
+      buildingUnits.map(unit => this.getUnitId(unit))
     );
 
     const buildingDebts = debts.filter(debt =>
@@ -393,6 +430,7 @@ export class Finance implements OnInit {
 
     if (
       report.totalRevenue === undefined &&
+      report.totalCollectedFromDebts === undefined &&
       report.dineroRecolectadoPorPagoDeuda === undefined
     ) {
       this.totalRevenue = paidAmount;
@@ -400,6 +438,7 @@ export class Finance implements OnInit {
 
     if (
       report.pendingDues === undefined &&
+      report.totalDebt === undefined &&
       report.deudaTotal === undefined
     ) {
       this.pendingDues = pendingAmount;
@@ -407,6 +446,7 @@ export class Finance implements OnInit {
 
     if (
       report.arrears === undefined &&
+      report.totalOverdueDebt === undefined &&
       report.deudaAtrasadaTotal === undefined
     ) {
       this.arrears = overdueAmount;
@@ -525,7 +565,7 @@ export class Finance implements OnInit {
     );
 
     const buildingUnitIds = new Set(
-      buildingUnits.map(unit => Number(unit.id))
+      buildingUnits.map(unit => this.getUnitId(unit))
     );
 
     const pendingDebts = debts.filter(debt =>
@@ -540,7 +580,7 @@ export class Finance implements OnInit {
 
       const unit = buildingUnits.find(
         currentUnit =>
-          Number(currentUnit.id) === unitId
+          this.getUnitId(currentUnit) === unitId
       );
 
       const userUnit = userUnits.find(
@@ -565,7 +605,7 @@ export class Finance implements OnInit {
 
       const building = buildings.find(
         currentBuilding =>
-          Number(currentBuilding.id) === unitBuildingId
+          this.getBuildingIdentifier(currentBuilding) === unitBuildingId
       );
 
       const dueDate = new Date(debt.dueDate);
@@ -886,6 +926,26 @@ export class Finance implements OnInit {
     return Number(
       unit.idBuilding ??
       unit.buildingId ??
+      0
+    );
+  }
+
+  private getUnitId(
+    unit: Unit
+  ): number {
+    return Number(
+      unit.idUnit ??
+      unit.id ??
+      0
+    );
+  }
+
+  private getBuildingIdentifier(
+    building: Building
+  ): number {
+    return Number(
+      building.idBuilding ??
+      building.id ??
       0
     );
   }

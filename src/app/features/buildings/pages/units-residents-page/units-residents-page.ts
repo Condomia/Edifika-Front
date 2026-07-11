@@ -22,11 +22,17 @@ import { UnitsService } from
 import { BuildingsService } from
     '../../services/buildings.service';
 
+import { UserUnitsService } from
+    '../../services/user-units.service';
+
 import { Unit } from
     '../../model/unit.model';
 
 import { Building } from
     '../../model/building.model';
+
+import { UserUnit } from
+    '../../model/user-unit.model';
 
 import { UnitResidentView } from
     '../../model/unit-resident-view.model';
@@ -70,7 +76,8 @@ export class UnitsResidentsPage implements OnInit {
   constructor(
     private usersService: UsersService,
     private unitsService: UnitsService,
-    private buildingsService: BuildingsService
+    private buildingsService: BuildingsService,
+    private userUnitsService: UserUnitsService
   ) {}
 
   ngOnInit(): void {
@@ -90,6 +97,7 @@ export class UnitsResidentsPage implements OnInit {
             buildingUnits: [] as Array<{
               building: Building;
               units: Unit[];
+              residents: UserUnit[];
             }>
           });
         }
@@ -98,10 +106,17 @@ export class UnitsResidentsPage implements OnInit {
           this.unitsService
             .getByBuildingId(building.idBuilding)
             .pipe(
-              map(units => ({
-                building,
-                units
-              }))
+              switchMap(units =>
+                this.userUnitsService
+                  .getResidentsByBuildingId(building.idBuilding)
+                  .pipe(
+                    map(residents => ({
+                      building,
+                      units,
+                      residents
+                    }))
+                  )
+              )
             )
         );
 
@@ -136,9 +151,9 @@ export class UnitsResidentsPage implements OnInit {
         ).length;
 
         this.rows = buildingUnits.flatMap(
-          ({ building, units }) =>
+          ({ building, units, residents }) =>
             units.map(unit =>
-              this.toView(unit, building)
+              this.toView(unit, building, residents, users)
             )
         );
 
@@ -158,7 +173,9 @@ export class UnitsResidentsPage implements OnInit {
 
   private toView(
     unit: Unit,
-    building: Building
+    building: Building,
+    residents: UserUnit[],
+    users: User[]
   ): UnitResidentView {
 
     let displayedStatus = 'VACANT';
@@ -171,6 +188,20 @@ export class UnitsResidentsPage implements OnInit {
       displayedStatus = 'OCCUPIED';
     }
 
+    const activeRelation = residents.find(
+      resident =>
+        Number(resident.idUnit) === Number(unit.idUnit) &&
+        resident.status === 'ACTIVE' &&
+        !resident.endDate
+    );
+
+    const residentUser = activeRelation
+      ? users.find(
+        user =>
+          Number(user.id) === Number(activeRelation.idUser)
+      )
+      : undefined;
+
     return {
       unitId: unit.idUnit,
       unitNumber: unit.unitNumber,
@@ -181,11 +212,11 @@ export class UnitsResidentsPage implements OnInit {
 
       unitStatus: displayedStatus,
 
-      residentId: undefined,
-      residentName: 'No Resident',
-      residentRole: 'Not assigned',
-      email: '—',
-      phone: '',
+      residentId: residentUser?.id,
+      residentName: residentUser?.fullName ?? 'No Resident',
+      residentRole: residentUser?.roles?.join(', ') ?? 'Not assigned',
+      email: residentUser?.email ?? '—',
+      phone: residentUser?.phone ?? '',
 
       debtStatus: 'N/A',
       debtLabel: 'N/A'

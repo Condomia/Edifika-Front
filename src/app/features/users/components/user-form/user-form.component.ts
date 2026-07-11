@@ -144,10 +144,7 @@ export class UserFormComponent implements OnInit {
       documentNumber: value.documentNumber.trim(),
 
       // Todo usuario creado desde Units & Residents será OWNER.
-      roles: ['OWNER'],
-
-      // Estado inicial.
-      status: 'PENDING'
+      roles: ['OWNER']
     };
 
     this.registerService.signUp(resource).subscribe({

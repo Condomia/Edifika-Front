@@ -4,7 +4,7 @@ export interface Reservation {
   commonAreaId: number | string;
   reservationDate: string;
   timeSlot: number;
-  numberOfGuests: number;
+  numberOfGuests?: number;
   status: 'ACTIVE' | 'CANCELLED';
   qrCodeAccess: string;
   penaltyApplied: boolean;

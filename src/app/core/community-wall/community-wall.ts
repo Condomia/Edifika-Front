@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClient } from '@angular/common/http';
-import { environment } from '../../../environments/environment.production';
+import { environment } from '../../../environments/environment';
 import { BUILDING_RULES_SECTIONS } from '../../shared/constants/building-rules-content';
 
 interface Post {
@@ -11,13 +11,14 @@ interface Post {
   content: string;
   residentId: number;
   imageUrl?: string;
-  attachedImage?: string;
   createdAt: string;
 }
 
 interface User { id: number; fullName: string; }
-interface UserUnit { idUser: number; idUnit: number; }
-interface Unit { id: number; unitNumber: number; }
+
+interface PageResponse<T> {
+  content: T[];
+}
 
 interface EnrichedPost {
   id: number;
@@ -57,24 +58,21 @@ export class CommunityWall implements OnInit {
 
   fetchData() {
     Promise.all([
-      this.http.get<Post[]>(`${this.baseUrl}/posts`).toPromise(),
-      this.http.get<User[]>(`${this.baseUrl}/users`).toPromise(),
-      this.http.get<UserUnit[]>(`${this.baseUrl}/userUnits`).toPromise(),
-      this.http.get<Unit[]>(`${this.baseUrl}/units`).toPromise()
-    ]).then(([rawPosts = [], users = [], userUnits = [], units = []]) => {
+      this.http.get<PageResponse<Post>>(`${this.baseUrl}/posts`).toPromise(),
+      this.http.get<User[]>(`${this.baseUrl}/users`).toPromise()
+    ]).then(([postsPage, users = []]) => {
+      const rawPosts = postsPage?.content ?? [];
 
       const sortedPosts = rawPosts.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
 
       this.posts = sortedPosts.map(p => {
         const user = users.find(u => u.id === p.residentId);
-        const userUnit = userUnits.find(uu => uu.idUser === p.residentId);
-        const unit = userUnit ? units.find(u => u.id === userUnit.idUnit) : null;
 
         const isAnnouncement = p.title.toLowerCase().includes('mantenimiento') || p.title.toLowerCase().includes('official');
 
         let authorName = user ? user.fullName : 'Unknown Resident';
         let authorAvatar = p.imageUrl || 'https://i.pravatar.cc/150?u=default';
-        let authorUnit = unit ? `Unit ${unit.unitNumber}` : 'Management';
+        let authorUnit = 'Resident';
 
         if (isAnnouncement) {
           authorName = 'Edifika Management';
@@ -90,8 +88,8 @@ export class CommunityWall implements OnInit {
           authorAvatar: authorAvatar,
           timeAgo: this.getTimeAgo(p.createdAt),
           isAnnouncement: isAnnouncement,
-          hasAttachedImage: !!p.attachedImage || isAnnouncement,
-          attachedImageUrl: p.attachedImage || (isAnnouncement ? 'https://images.unsplash.com/photo-1576013551627-11971f36c9d0?auto=format&fit=crop&w=800&q=80' : '')
+          hasAttachedImage: !!p.imageUrl || isAnnouncement,
+          attachedImageUrl: p.imageUrl || (isAnnouncement ? 'https://images.unsplash.com/photo-1576013551627-11971f36c9d0?auto=format&fit=crop&w=800&q=80' : '')
         };
       });
     });
@@ -141,10 +139,8 @@ export class CommunityWall implements OnInit {
     const newPost = {
       title: 'New Update',
       content: this.newPostContent,
-      residentId: 2, // Hardcoded resident for demo
-      imageUrl: 'https://i.pravatar.cc/150?u=a042581f4e29026704d',
-      attachedImage: this.newPostImageBase64 || '',
-      createdAt: new Date().toISOString()
+      residentId: this.getCurrentUserId(),
+      imageUrl: this.newPostImageBase64 || ''
     };
 
     this.http.post(`${this.baseUrl}/posts`, newPost).subscribe({
@@ -159,5 +155,15 @@ export class CommunityWall implements OnInit {
         alert('Error creating post');
       }
     });
+  }
+
+  private getCurrentUserId(): number {
+    const currentUser = localStorage.getItem('edifika_user');
+
+    if (!currentUser) {
+      return 0;
+    }
+
+    return Number(JSON.parse(currentUser).id ?? 0);
   }
 }

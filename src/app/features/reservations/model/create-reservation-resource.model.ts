@@ -3,6 +3,4 @@ export interface CreateReservationResource {
   commonAreaId: number;
   reservationDate: string;
   timeSlot: number;
-  numberOfGuests: number;
-
 }

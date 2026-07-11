@@ -1,7 +1,7 @@
 export const environment = {
-  production: true,
+  production: false,
 
-  serverBaseUrl: 'https://edifika-apigateway.onrender.com/api/v1',
+  serverBaseUrl: 'http://localhost:8080/api/v1',
 
   authenticationEndpointPath: '/authentication',
   userEndpointPath: '/users',
@@ -24,7 +24,7 @@ export const environment = {
   announcementEndpointPath: '/announcements',
   announcementReadEndpointPath: '/announcement-reads',
 
-  notificationEndpointPath: '/api/v1/notifications',
-  deviceTokenEndpointPath: '/api/v1/device-tokens',
-  reportEndpointPath: '/api/v1/reports'
+  notificationEndpointPath: '/notifications',
+  deviceTokenEndpointPath: '/device-tokens',
+  reportEndpointPath: '/reports'
 };

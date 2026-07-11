@@ -35,11 +35,33 @@ export class LoginService {
   }
 
   isLoggedIn(): boolean {
-    return !!this.getToken();
+    const token = this.getToken();
+
+    if (!token || this.isTokenExpired(token)) {
+      this.logout();
+      return false;
+    }
+
+    return true;
   }
 
   logout(): void {
     localStorage.removeItem('edifika_token');
     localStorage.removeItem('edifika_user');
+  }
+
+  private isTokenExpired(token: string): boolean {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1] ?? ''));
+      const expiration = payload.exp;
+
+      if (!expiration) {
+        return false;
+      }
+
+      return Date.now() >= expiration * 1000;
+    } catch {
+      return true;
+    }
   }
 }

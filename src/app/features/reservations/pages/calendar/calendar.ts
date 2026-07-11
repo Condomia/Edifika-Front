@@ -1,6 +1,7 @@
 import { ReservationService } from '../../services/reservation.service';
 import { CommonAreaService } from '../../services/common-area.service';
 import { Reservation } from '../../model/reservation.model';
+import { CreateReservationResource } from '../../model/create-reservation-resource.model';
 import { CommonArea } from '../../model/common-area.model';
 import { UsersService } from '../../../users/services/users.service';
 import { User } from '../../../users/model/user.model';
@@ -320,23 +321,25 @@ export class Calendar implements OnInit {
       return;
     }
 
-    const newReservation: Reservation = {
+    const newReservation: CreateReservationResource = {
       residentId: Number(this.reservationForm.residentId),
       commonAreaId: Number(this.reservationForm.commonAreaId),
       reservationDate,
-      timeSlot,
-      numberOfGuests,
-      status: 'ACTIVE',
-      qrCodeAccess: crypto.randomUUID(),
-      penaltyApplied: false
+      timeSlot
     };
 
-    this.reservationService.create(newReservation).subscribe({
+    this.reservationService.createReservation(newReservation).subscribe({
       next: () => {
         this.closeCreateReservationModal();
-        window.location.reload();
+        this.loadCalendarData();
       },
-      error: error => console.error(error)
+      error: error => {
+        console.error(error);
+        this.reservationError =
+          error?.error?.message ??
+          error?.error ??
+          'No se pudo crear la reserva.';
+      }
     });
   }
 
@@ -365,15 +368,10 @@ export class Calendar implements OnInit {
   }
 
   cancelReservation(detail: any): void {
-    const reservation: Reservation = {
-      ...detail.reservation,
-      status: 'CANCELLED'
-    };
-
-    this.reservationService.update(reservation.id!, reservation).subscribe({
+    this.reservationService.cancelReservation(detail.reservation.id).subscribe({
       next: () => {
         this.closeReservationDetailModal();
-        window.location.reload();
+        this.loadCalendarData();
       },
       error: error => console.error(error)
     });
