@@ -1,11 +1,9 @@
 <div class="common-area-list">
   @for (area of commonAreas; track area.id) {
     <app-common-area-card
-      *ngFor="let area of commonAreas"
       [commonArea]="area"
       (editRules)="onEditRules($event)"
       (statusChanged)="onStatusChanged($event)">
-      >
     </app-common-area-card>
   }
 </div>
