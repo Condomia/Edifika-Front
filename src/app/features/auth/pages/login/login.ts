@@ -1,7 +1,11 @@
 import { CommonModule } from '@angular/common';
 import { Component, inject } from '@angular/core';
 import { Router } from '@angular/router';
-import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
+import {
+  FormBuilder,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 
 import { LoginService } from '../../services/login-service';
 import { SignInResource } from '../../models/sign-in-resource.model';
@@ -9,7 +13,10 @@ import { SignInResource } from '../../models/sign-in-resource.model';
 @Component({
   selector: 'app-login',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule
+  ],
   templateUrl: './login.html',
   styleUrl: './login.css',
 })
@@ -23,8 +30,17 @@ export class Login {
   showPassword = false;
 
   loginForm = this.formBuilder.group({
-    email: ['', [Validators.required, Validators.email]],
-    password: ['', Validators.required],
+    email: [
+      '',
+      [
+        Validators.required,
+        Validators.email
+      ]
+    ],
+    password: [
+      '',
+      Validators.required
+    ],
     remember: [false]
   });
 
@@ -47,29 +63,10 @@ export class Login {
     };
 
     this.loginService.signIn(resource).subscribe({
-      next: (response: any) => {
+      next: () => {
         this.isLoading = false;
-
-        const roles: string[] =
-          response?.roles ??
-          response?.user?.roles ??
-          [];
-
-        const isAdmin = roles.some(
-          role => role.toUpperCase() === 'ADMIN'
-        );
-
-        if (!isAdmin) {
-          this.errorMessage =
-            'Acceso restringido. Solo los administradores pueden ingresar.';
-
-          this.loginService.logout?.();
-          return;
-        }
-
         this.router.navigate(['/app/dashboard']);
       },
-
       error: () => {
         this.isLoading = false;
         this.errorMessage = 'Email o contraseña incorrectos.';
