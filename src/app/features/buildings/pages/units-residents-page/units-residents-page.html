@@ -112,7 +112,7 @@
 </app-unit-form>
 <app-user-form
   *ngIf="isCreatingUser"
-  [user]="selectedUser"
+  [user]="null"
   [isCreateMode]="true"
   (close)="onUserFormClose($event)">
 </app-user-form>
