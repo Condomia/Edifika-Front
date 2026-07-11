@@ -26,4 +26,18 @@ export class UnitsService extends BaseService<Unit> {
       catchError(this.handleError)
     );
   }
+
+  getByBuildingId(idBuilding: number): Observable<Unit[]> {
+    const baseUrl = this.serverBaseUrl.replace(/\/+$/, '');
+
+    const buildingsPath =
+      environment.buildingEndpointPath.replace(/^\/+/, '');
+
+    return this.http.get<Unit[]>(
+      `${baseUrl}/${buildingsPath}/${idBuilding}/units`,
+      this.httpOptions
+    ).pipe(
+      catchError(this.handleError)
+    );
+  }
 }

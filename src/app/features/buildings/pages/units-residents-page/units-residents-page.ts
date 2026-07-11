@@ -1,6 +1,11 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { forkJoin } from 'rxjs';
+import {
+  forkJoin,
+  map,
+  of,
+  switchMap
+} from 'rxjs';
 
 import { UserFormComponent } from
     '../../../users/components/user-form/user-form.component';
@@ -28,7 +33,9 @@ import { UnitResidentView } from
 
 import { UnitFormComponent } from
     '../../components/unit-form.component/unit-form.component';
-import {BuildingFormComponent} from '../../components/building-form.component/building-form.component';
+
+import { BuildingFormComponent } from
+    '../../components/building-form.component/building-form.component';
 
 @Component({
   selector: 'app-units-residents-page',
@@ -43,6 +50,7 @@ import {BuildingFormComponent} from '../../components/building-form.component/bu
   styleUrl: './units-residents-page.css',
 })
 export class UnitsResidentsPage implements OnInit {
+
   rows: UnitResidentView[] = [];
   units: Unit[] = [];
   owners: User[] = [];
@@ -53,6 +61,7 @@ export class UnitsResidentsPage implements OnInit {
   isEditingUnit = false;
   isCreatingUser = false;
   isCreatingBuilding = false;
+
   totalUnits = 0;
   outstandingDebt = 0;
   newMoveIns = 0;
@@ -67,34 +76,58 @@ export class UnitsResidentsPage implements OnInit {
   ngOnInit(): void {
     this.loadData();
   }
-  createBuilding(): void {
-    this.isCreatingBuilding = true;
-  }
 
-  onBuildingFormClose(refresh: boolean): void {
-    this.isCreatingBuilding = false;
-
-    if (refresh) {
-      this.loadData();
-    }
-  }
   loadData(): void {
     forkJoin({
       users: this.usersService.getAll(),
-      units: this.unitsService.getAll(),
       buildings: this.buildingsService.getAll()
-    }).subscribe({
-      next: ({ users, units, buildings }) => {
+    }).pipe(
+      switchMap(({ users, buildings }) => {
+
+        if (buildings.length === 0) {
+          return of({
+            users,
+            buildingUnits: [] as Array<{
+              building: Building;
+              units: Unit[];
+            }>
+          });
+        }
+
+        const requests = buildings.map(building =>
+          this.unitsService
+            .getByBuildingId(building.idBuilding)
+            .pipe(
+              map(units => ({
+                building,
+                units
+              }))
+            )
+        );
+
+        return forkJoin(requests).pipe(
+          map(buildingUnits => ({
+            users,
+            buildingUnits
+          }))
+        );
+      })
+    ).subscribe({
+      next: ({ users, buildingUnits }) => {
+
         this.owners = users.filter(user =>
-          user.roles?.some(
+          user.roles.some(
             role => role.toUpperCase() === 'OWNER'
           )
         );
 
-        this.units = units;
-        this.totalUnits = units.length;
+        this.units = buildingUnits.flatMap(
+          item => item.units
+        );
 
-        this.maintenanceRequests = units.filter(
+        this.totalUnits = this.units.length;
+
+        this.maintenanceRequests = this.units.filter(
           unit => unit.status === 'MAINTENANCE'
         ).length;
 
@@ -102,15 +135,12 @@ export class UnitsResidentsPage implements OnInit {
           owner => owner.status === 'PENDING'
         ).length;
 
-        this.rows = units.map(unit => {
-          const building = buildings.find(
-            currentBuilding =>
-              Number(currentBuilding.idBuilding) ===
-              Number(unit.idBuilding)
-          );
-
-          return this.toView(unit, building);
-        });
+        this.rows = buildingUnits.flatMap(
+          ({ building, units }) =>
+            units.map(unit =>
+              this.toView(unit, building)
+            )
+        );
 
         this.outstandingDebt = this.rows.filter(
           row => row.debtStatus === 'LATE'
@@ -119,7 +149,7 @@ export class UnitsResidentsPage implements OnInit {
 
       error: error => {
         console.error(
-          'Error loading units and users:',
+          'Error loading units, buildings and users:',
           error
         );
       }
@@ -128,20 +158,28 @@ export class UnitsResidentsPage implements OnInit {
 
   private toView(
     unit: Unit,
-    building?: Building
+    building: Building
   ): UnitResidentView {
+
+    let displayedStatus = 'VACANT';
+
+    if (unit.status === 'MAINTENANCE') {
+      displayedStatus = 'MAINTENANCE';
+    }
+
+    if (unit.status === 'OCCUPIED') {
+      displayedStatus = 'OCCUPIED';
+    }
+
     return {
       unitId: unit.idUnit,
       unitNumber: unit.unitNumber,
 
       tower:
-        building?.name ??
-        'Tower A',
+        building.name ??
+        'Unknown Building',
 
-      unitStatus:
-        unit.status === 'MAINTENANCE'
-          ? 'MAINTENANCE'
-          : 'VACANT',
+      unitStatus: displayedStatus,
 
       residentId: undefined,
       residentName: 'No Resident',
@@ -152,6 +190,18 @@ export class UnitsResidentsPage implements OnInit {
       debtStatus: 'N/A',
       debtLabel: 'N/A'
     };
+  }
+
+  createBuilding(): void {
+    this.isCreatingBuilding = true;
+  }
+
+  onBuildingFormClose(refresh: boolean): void {
+    this.isCreatingBuilding = false;
+
+    if (refresh) {
+      this.loadData();
+    }
   }
 
   createUser(): void {
