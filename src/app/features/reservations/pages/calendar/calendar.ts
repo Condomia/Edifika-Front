@@ -5,13 +5,24 @@ import { CreateReservationResource } from '../../model/create-reservation-resour
 import { CommonArea } from '../../model/common-area.model';
 import { UsersService } from '../../../users/services/users.service';
 import { User } from '../../../users/model/user.model';
-import { forkJoin, Subject } from 'rxjs';
+import {
+  catchError,
+  forkJoin,
+  map,
+  of,
+  Subject,
+  switchMap
+} from 'rxjs';
 import { ReservationListComponent } from '../../components/reservation-list.component/reservation-list.component';
 import { ReservationDetailComponent } from '../../components/reservation-detail.component/reservation-detail.component';
+import { BuildingsService } from '../../../buildings/services/buildings.service';
+import { UserUnitsService } from '../../../buildings/services/user-units.service';
+import { UserUnit } from '../../../buildings/model/user-unit.model';
 
 import {
   Component,
   ChangeDetectionStrategy,
+  ChangeDetectorRef,
   ViewChild,
   TemplateRef,
   OnInit,
@@ -58,6 +69,13 @@ const colors: Record<string, EventColor> = {
     secondary: '#E5E7EB',
   },
 };
+interface ReservationFormState {
+  residentId: number | null;
+  commonAreaId: number | null;
+  reservationDate: string;
+  timeSlot: number;
+  numberOfGuests: number;
+}
 
 @Component({
   selector: 'app-calendar',
@@ -86,7 +104,10 @@ export class Calendar implements OnInit {
   constructor(
     private reservationService: ReservationService,
     private commonAreaService: CommonAreaService,
-    private usersService: UsersService
+    private usersService: UsersService,
+    private buildingsService: BuildingsService,
+    private userUnitsService: UserUnitsService,
+    private cdr: ChangeDetectorRef
   ) {}
 
   @ViewChild('modalContent', { static: true }) modalContent!: TemplateRef<any>;
@@ -102,9 +123,9 @@ export class Calendar implements OnInit {
   todayDate = new Date().toISOString().split('T')[0];
   reservationError = '';
 
-  reservationForm = {
-    residentId: '',
-    commonAreaId: '',
+  reservationForm: ReservationFormState = {
+    residentId: null,
+    commonAreaId: null,
     reservationDate: '',
     timeSlot: 9,
     numberOfGuests: 1
@@ -152,40 +173,156 @@ export class Calendar implements OnInit {
     forkJoin({
       reservations: this.reservationService.getAll(),
       commonAreas: this.commonAreaService.getAll(),
-      users: this.usersService.getAll()
-    }).subscribe(({ reservations, commonAreas, users }) => {
-      this.commonAreas = commonAreas;
+      users: this.usersService.getAll(),
+      buildings: this.buildingsService.getAll()
+    }).pipe(
+      switchMap(({
+                   reservations,
+                   commonAreas,
+                   users,
+                   buildings
+                 }) => {
 
-      this.users = users.filter(user =>
-        user.status === 'ACTIVE' &&
-        user.roles?.some(role => role === 'OWNER' || role === 'TENANT')
-      );
+        if (buildings.length === 0) {
+          return of({
+            reservations,
+            commonAreas,
+            users,
+            relations: [] as UserUnit[]
+          });
+        }
 
-      this.reservations = reservations;
+        const relationRequests = buildings.map(building =>
+          this.userUnitsService
+            .getByBuildingId(building.idBuilding)
+            .pipe(
+              catchError(error => {
+                console.error(
+                  `Error loading residents from building ${building.idBuilding}:`,
+                  error
+                );
 
-      this.events = reservations.map((reservation: Reservation) => {
-        const area = commonAreas.find(
-          (area: CommonArea) => Number(area.id) === Number(reservation.commonAreaId)
+                return of([] as UserUnit[]);
+              })
+            )
         );
 
-        const user = users.find(
-          (user: User) => Number(user.id) === Number(reservation.residentId)
+        return forkJoin(relationRequests).pipe(
+          map(relationsByBuilding => ({
+            reservations,
+            commonAreas,
+            users,
+            relations: relationsByBuilding.flat()
+          }))
+        );
+      })
+    ).subscribe({
+      next: ({
+               reservations,
+               commonAreas,
+               users,
+               relations
+             }) => {
+        this.commonAreas = commonAreas;
+        this.reservations = reservations;
+
+        /*
+         * Identificadores de usuarios que tienen una relación
+         * activa con alguna unidad.
+         */
+        const activeResidentIds = new Set(
+          relations
+            .filter(relation =>
+              relation.status === 'ACTIVE' &&
+              relation.endDate == null
+            )
+            .map(relation => Number(relation.idUser))
         );
 
-        return {
-          title: `${area?.name ?? 'Área común'} - ${user?.fullName?.split(' ')[0] ?? 'Residente'}`,
-          start: new Date(`${reservation.reservationDate}T${reservation.timeSlot}:00:00`),
-          end: new Date(`${reservation.reservationDate}T${Number(reservation.timeSlot) + 1}:00:00`),
-          color: this.getReservationColor(reservation, area),
-          meta: {
-            reservation,
-            area,
-            user
+        /*
+         * Mostrar únicamente:
+         * - Usuarios relacionados con una unidad.
+         * - OWNER o TENANT.
+         * - No inactivos.
+         *
+         * No usamos status === ACTIVE porque los usuarios nuevos
+         * pueden encontrarse como PENDING o VERIFIED.
+         */
+        this.users = users.filter(user => {
+          const hasResidentRole = user.roles?.some(role => {
+            const normalizedRole = role.toUpperCase();
+
+            return (
+              normalizedRole === 'OWNER' ||
+              normalizedRole === 'TENANT'
+            );
+          });
+
+          return (
+            activeResidentIds.has(Number(user.id)) &&
+            hasResidentRole &&
+            user.status !== 'INACTIVE'
+          );
+        });
+
+        this.events = reservations.map(
+          (reservation: Reservation): CalendarEvent => {
+            const area = commonAreas.find(
+              commonArea =>
+                Number(commonArea.id) ===
+                Number(reservation.commonAreaId)
+            );
+
+            const user = users.find(
+              currentUser =>
+                Number(currentUser.id) ===
+                Number(reservation.residentId)
+            );
+
+            return {
+              title:
+                `${area?.name ?? 'Área común'} - ` +
+                `${user?.fullName?.split(' ')[0] ?? 'Residente'}`,
+
+              start: new Date(
+                `${reservation.reservationDate}` +
+                `T${reservation.timeSlot}:00:00`
+              ),
+
+              end: new Date(
+                `${reservation.reservationDate}` +
+                `T${Number(reservation.timeSlot) + 1}:00:00`
+              ),
+
+              color: this.getReservationColor(
+                reservation,
+                area
+              ),
+
+              meta: {
+                reservation,
+                area,
+                user
+              }
+            };
           }
-        };
-      });
+        );
 
-      this.refresh.next();
+        this.refresh.next();
+        this.cdr.markForCheck();
+      },
+
+      error: error => {
+        console.error(
+          'Error loading calendar information:',
+          error
+        );
+
+        this.reservationError =
+          'No se pudo cargar la información del calendario.';
+
+        this.cdr.markForCheck();
+      }
     });
   }
 
@@ -231,14 +368,17 @@ export class Calendar implements OnInit {
 
   closeCreateReservationModal(): void {
     this.showCreateReservationModal = false;
+    this.reservationError = '';
 
     this.reservationForm = {
-      residentId: '',
-      commonAreaId: '',
+      residentId: null,
+      commonAreaId: null,
       reservationDate: '',
       timeSlot: 9,
       numberOfGuests: 1
     };
+
+    this.cdr.markForCheck();
   }
 
   createReservation(): void {
@@ -262,7 +402,7 @@ export class Calendar implements OnInit {
       return;
     }
 
-    if (!this.reservationForm.residentId) {
+    if (this.reservationForm.residentId == null) {
       this.reservationError = 'Please select a resident.';
       return;
     }
@@ -271,7 +411,10 @@ export class Calendar implements OnInit {
       this.reservationError = 'Time slot must be between 0 and 23.';
       return;
     }
-
+    if (this.reservationForm.commonAreaId == null) {
+      this.reservationError = 'Please select a common area.';
+      return;
+    }
     if (!selectedArea) {
       this.reservationError = 'Please select a common area.';
       return;
