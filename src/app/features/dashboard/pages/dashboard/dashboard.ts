@@ -256,10 +256,7 @@ export class Dashboard implements OnInit {
     });
   }
 
-  /**
-   * Obtiene las deudas por unidad y los pagos
-   * por residente.
-   */
+
   private loadFinancials(
     units: Unit[],
     residents: UserUnit[]
@@ -297,10 +294,7 @@ export class Dashboard implements OnInit {
               debts.map(debt => ({
                 ...debt,
 
-                /*
-                 * Si el backend no retorna unitId,
-                 * se agrega la unidad consultada.
-                 */
+
                 unitId:
                   debt.unitId ??
                   debt.idUnit ??
@@ -361,9 +355,7 @@ export class Dashboard implements OnInit {
     });
   }
 
-  /**
-   * Procesa la información obtenida de Payment.
-   */
+
   private processFinancialInformation(
     units: Unit[],
     debts: any[],
@@ -397,10 +389,7 @@ export class Dashboard implements OnInit {
       )
     );
 
-    /*
-     * Conserva los pagos relacionados
-     * con las deudas cargadas.
-     */
+
     const paymentsWithDebt =
       payments.filter(payment =>
         debtIds.has(
@@ -411,11 +400,7 @@ export class Dashboard implements OnInit {
         )
       );
 
-    /*
-     * Si PaymentResource no devuelve debtId,
-     * se mantienen los pagos por usuario para
-     * poder mostrar la recaudación y el gráfico.
-     */
+
     this.allPayments =
       this.removeDuplicates(
         paymentsWithDebt.length > 0
@@ -582,32 +567,26 @@ export class Dashboard implements OnInit {
       });
   }
 
-  /**
-   * El backend actual permite cancelar
-   * una reserva, pero no aprobarla.
-   */
-  updateReservationStatus(
-    id: number | string,
-    status: string
+  cancelReservation(
+    id: number | string
   ): void {
-    if (status !== 'REJECTED') {
-      console.warn(
-        'No existe un endpoint para aprobar reservas.'
-      );
-
-      return;
-    }
-
     this.reservationService
       .cancelReservation(id)
       .subscribe({
         next: () => {
+          this.pendingReservations =
+            this.pendingReservations.filter(
+              reservation =>
+                Number(reservation.id) !==
+                Number(id)
+            );
+
           this.loadReservations();
         },
 
         error: error => {
           console.error(
-            'Error cancelando la reserva:',
+            'Error cancelling reservation:',
             error
           );
         }
