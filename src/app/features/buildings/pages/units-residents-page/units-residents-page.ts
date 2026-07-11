@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
-
+import { UserFormComponent } from '../../../users/components/user-form/user-form.component';
 import { UsersService } from '../../../users/services/users.service';
 import { User } from '../../../users/model/user.model';
 
@@ -18,7 +18,11 @@ import { UnitFormComponent } from '../../components/unit-form.component/unit-for
 @Component({
   selector: 'app-units-residents-page',
   standalone: true,
-  imports: [CommonModule, UnitFormComponent],
+  imports: [
+    CommonModule,
+    UnitFormComponent,
+    UserFormComponent
+  ],
   templateUrl: './units-residents-page.html',
   styleUrl: './units-residents-page.css',
 })
@@ -34,7 +38,8 @@ export class UnitsResidentsPage implements OnInit {
   outstandingDebt = 0;
   newMoveIns = 0;
   maintenanceRequests = 0;
-
+  selectedUser: User | null = null;
+  isCreatingUser = false;
   constructor(
     private usersService: UsersService,
     private unitsService: UnitsService,
@@ -100,7 +105,17 @@ export class UnitsResidentsPage implements OnInit {
       debtLabel: hasResident ? 'PAID' : 'N/A'
     };
   }
+  createUser(): void {
+    this.isCreatingUser = true;
+  }
 
+  onUserFormClose(refresh: boolean): void {
+    this.isCreatingUser = false;
+
+    if (refresh) {
+      this.loadData();
+    }
+  }
   editRow(row: UnitResidentView): void {
     this.selectedUnit = this.units.find(u => Number(u.idUnit) === Number(row.unitId)) ?? null;
     this.isEditingUnit = true;

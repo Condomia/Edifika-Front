@@ -1,10 +1,8 @@
-export interface User {
-  id?: number;
+export interface UpdateUserResource {
   fullName: string;
   email: string;
+  password: string;
   phone: string;
-  status: string;
   documentType: string;
   documentNumber: string;
-  roles: string[];
 }

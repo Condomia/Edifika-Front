@@ -8,6 +8,13 @@
     <div class="header-actions">
       <button class="btn secondary">Export CSV</button>
       <button
+        type="button"
+        class="btn secondary"
+        (click)="createUser()">
+        Add New User
+      </button>
+
+      <button
         class="btn primary"
         (click)="createUnit()">
         Add New Unit
@@ -104,3 +111,9 @@
   [isCreateMode]="isCreatingUnit"
   (close)="onUnitFormClose($event)">
 </app-unit-form>
+<app-user-form
+  *ngIf="isCreatingUser"
+  [user]="selectedUser"
+  [isCreateMode]="true"
+  (close)="onUserFormClose($event)">
+</app-user-form>
