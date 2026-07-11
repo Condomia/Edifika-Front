@@ -1,5 +1,4 @@
-export interface UserUnit {
-  idUserUnit: number;
+export interface CreateUserUnitResource {
   idUnit: number;
   idUser: number;
   startDate: string;

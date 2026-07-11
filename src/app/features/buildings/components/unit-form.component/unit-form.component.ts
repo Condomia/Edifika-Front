@@ -19,7 +19,7 @@ import { forkJoin } from 'rxjs';
 import { Unit } from '../../model/unit.model';
 import { Building } from '../../model/building.model';
 import { User } from '../../../users/model/user.model';
-import { UserUnit } from '../../model/user-unit.model';
+import { CreateUserUnitResource } from '../../model/create-user-unit-resource.model';
 import { CreateUnitResource } from '../../model/create-unit-resource.model';
 
 import { UnitsService } from '../../services/units.service';
@@ -258,12 +258,7 @@ export class UnitFormComponent implements OnInit {
     unitId: number,
     buildingId: number
   ): void {
-    const relationId = Date.now();
-
-    const newRelation: UserUnit = {
-      id: relationId,
-      idUserUnit: relationId,
-      idBuilding: buildingId,
+    const resource: CreateUserUnitResource = {
       idUnit: unitId,
       idUser: ownerId,
       startDate: new Date().toISOString(),
@@ -271,25 +266,31 @@ export class UnitFormComponent implements OnInit {
       status: 'ACTIVE'
     };
 
-    this.userUnitsService.create(newRelation).subscribe({
-      next: () => {
-        this.finish();
-      },
+    console.log(
+      'Assigning owner to unit:',
+      resource
+    );
 
-      error: error => {
-        console.error(
-          'Error assigning owner:',
-          error
-        );
+    this.userUnitsService
+      .assignUserToUnit(resource)
+      .subscribe({
+        next: () => {
+          this.finish();
+        },
 
-        this.errorMessage =
-          'La unidad fue creada, pero no se pudo asignar el propietario.';
+        error: error => {
+          console.error(
+            'Error assigning owner:',
+            error
+          );
 
-        this.isSubmitting = false;
-      }
-    });
+          this.errorMessage =
+            'La unidad fue creada, pero no se pudo asignar el propietario.';
+
+          this.isSubmitting = false;
+        }
+      });
   }
-
   updateUnit(): void {
     const formValue = this.unitForm.getRawValue();
 

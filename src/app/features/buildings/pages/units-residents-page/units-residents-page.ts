@@ -1,5 +1,6 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+
 import {
   forkJoin,
   map,
@@ -22,11 +23,17 @@ import { UnitsService } from
 import { BuildingsService } from
     '../../services/buildings.service';
 
+import { UserUnitsService } from
+    '../../services/user-units.service';
+
 import { Unit } from
     '../../model/unit.model';
 
 import { Building } from
     '../../model/building.model';
+
+import { UserUnit } from
+    '../../model/user-unit.model';
 
 import { UnitResidentView } from
     '../../model/unit-resident-view.model';
@@ -36,6 +43,12 @@ import { UnitFormComponent } from
 
 import { BuildingFormComponent } from
     '../../components/building-form.component/building-form.component';
+
+interface BuildingData {
+  building: Building;
+  units: Unit[];
+  relations: UserUnit[];
+}
 
 @Component({
   selector: 'app-units-residents-page',
@@ -70,7 +83,8 @@ export class UnitsResidentsPage implements OnInit {
   constructor(
     private usersService: UsersService,
     private unitsService: UnitsService,
-    private buildingsService: BuildingsService
+    private buildingsService: BuildingsService,
+    private userUnitsService: UserUnitsService
   ) {}
 
   ngOnInit(): void {
@@ -87,69 +101,129 @@ export class UnitsResidentsPage implements OnInit {
         if (buildings.length === 0) {
           return of({
             users,
-            buildingUnits: [] as Array<{
-              building: Building;
-              units: Unit[];
-            }>
+            buildingData: [] as BuildingData[]
           });
         }
 
-        const requests = buildings.map(building =>
-          this.unitsService
-            .getByBuildingId(building.idBuilding)
-            .pipe(
-              map(units => ({
+        const buildingRequests =
+          buildings.map(building =>
+            forkJoin({
+              units:
+                this.unitsService.getByBuildingId(
+                  building.idBuilding
+                ),
+
+              relations:
+                this.userUnitsService.getByBuildingId(
+                  building.idBuilding
+                )
+            }).pipe(
+              map(({ units, relations }) => ({
                 building,
-                units
+                units,
+                relations
               }))
             )
-        );
+          );
 
-        return forkJoin(requests).pipe(
-          map(buildingUnits => ({
+        return forkJoin(buildingRequests).pipe(
+          map(buildingData => ({
             users,
-            buildingUnits
+            buildingData
           }))
         );
       })
     ).subscribe({
-      next: ({ users, buildingUnits }) => {
+      next: ({ users, buildingData }) => {
 
+        /*
+         * Usuarios disponibles para ser propietarios.
+         */
         this.owners = users.filter(user =>
-          user.roles.some(
-            role => role.toUpperCase() === 'OWNER'
+          user.roles?.some(
+            role =>
+              role.toUpperCase() === 'OWNER'
           )
         );
 
-        this.units = buildingUnits.flatMap(
+        /*
+         * Todas las unidades de todos los edificios.
+         */
+        this.units = buildingData.flatMap(
           item => item.units
         );
 
-        this.totalUnits = this.units.length;
+        /*
+         * Todas las relaciones usuario-unidad.
+         */
+        const allRelations =
+          buildingData.flatMap(
+            item => item.relations
+          );
 
-        this.maintenanceRequests = this.units.filter(
-          unit => unit.status === 'MAINTENANCE'
-        ).length;
+        this.totalUnits =
+          this.units.length;
 
-        this.newMoveIns = this.owners.filter(
-          owner => owner.status === 'PENDING'
-        ).length;
+        this.maintenanceRequests =
+          this.units.filter(
+            unit =>
+              unit.status === 'MAINTENANCE'
+          ).length;
 
-        this.rows = buildingUnits.flatMap(
-          ({ building, units }) =>
-            units.map(unit =>
-              this.toView(unit, building)
-            )
+        /*
+         * Relaciones actualmente activas.
+         */
+        this.newMoveIns =
+          allRelations.filter(
+            relation =>
+              relation.status === 'ACTIVE'
+          ).length;
+
+        /*
+         * Para cada unidad:
+         * 1. Busca la relación activa.
+         * 2. Obtiene el usuario relacionado.
+         * 3. Construye la fila.
+         */
+        this.rows = buildingData.flatMap(
+          ({ building, units, relations }) =>
+            units.map(unit => {
+
+              const activeRelation =
+                relations.find(
+                  relation =>
+                    Number(relation.idUnit) ===
+                    Number(unit.idUnit) &&
+                    relation.status === 'ACTIVE'
+                );
+
+              const resident =
+                activeRelation
+                  ? users.find(
+                    user =>
+                      Number(user.id) ===
+                      Number(activeRelation.idUser)
+                  )
+                  : undefined;
+
+              return this.toView(
+                unit,
+                building,
+                resident
+              );
+            })
         );
 
-        this.outstandingDebt = this.rows.filter(
-          row => row.debtStatus === 'LATE'
-        ).length;
+        this.outstandingDebt =
+          this.rows.filter(
+            row =>
+              row.debtStatus === 'LATE'
+          ).length;
       },
 
       error: error => {
         console.error(
-          'Error loading units, buildings and users:',
+          'Error loading units, residents and buildings:',
           error
         );
       }
@@ -158,16 +232,16 @@ export class UnitsResidentsPage implements OnInit {
 
   private toView(
     unit: Unit,
-    building: Building
+    building: Building,
+    resident?: User
   ): UnitResidentView {
+    const hasResident = !!resident;
 
     let displayedStatus = 'VACANT';
 
     if (unit.status === 'MAINTENANCE') {
       displayedStatus = 'MAINTENANCE';
-    }
-
-    if (unit.status === 'OCCUPIED') {
+    } else if (hasResident) {
       displayedStatus = 'OCCUPIED';
     }
 
@@ -179,16 +253,37 @@ export class UnitsResidentsPage implements OnInit {
         building.name ??
         'Unknown Building',
 
-      unitStatus: displayedStatus,
+      unitStatus:
+      displayedStatus,
 
-      residentId: undefined,
-      residentName: 'No Resident',
-      residentRole: 'Not assigned',
-      email: '—',
-      phone: '',
+      residentId:
+      resident?.id,
 
-      debtStatus: 'N/A',
-      debtLabel: 'N/A'
+      residentName:
+        resident?.fullName ??
+        'No Resident',
+
+      residentRole:
+        resident?.roles?.[0] ??
+        'Not assigned',
+
+      email:
+        resident?.email ??
+        '—',
+
+      phone:
+        resident?.phone ??
+        '',
+
+      debtStatus:
+        hasResident
+          ? 'PAID'
+          : 'N/A',
+
+      debtLabel:
+        hasResident
+          ? 'PAID'
+          : 'N/A'
     };
   }
 
@@ -196,7 +291,9 @@ export class UnitsResidentsPage implements OnInit {
     this.isCreatingBuilding = true;
   }
 
-  onBuildingFormClose(refresh: boolean): void {
+  onBuildingFormClose(
+    refresh: boolean
+  ): void {
     this.isCreatingBuilding = false;
 
     if (refresh) {
@@ -208,7 +305,9 @@ export class UnitsResidentsPage implements OnInit {
     this.isCreatingUser = true;
   }
 
-  onUserFormClose(refresh: boolean): void {
+  onUserFormClose(
+    refresh: boolean
+  ): void {
     this.isCreatingUser = false;
 
     if (refresh) {
@@ -216,7 +315,9 @@ export class UnitsResidentsPage implements OnInit {
     }
   }
 
-  editRow(row: UnitResidentView): void {
+  editRow(
+    row: UnitResidentView
+  ): void {
     this.selectedUnit =
       this.units.find(
         unit =>
@@ -250,7 +351,9 @@ export class UnitsResidentsPage implements OnInit {
     this.isEditingUnit = false;
   }
 
-  onUnitFormClose(refresh: boolean): void {
+  onUnitFormClose(
+    refresh: boolean
+  ): void {
     this.isEditingUnit = false;
     this.isCreatingUnit = false;
     this.selectedUnit = null;
