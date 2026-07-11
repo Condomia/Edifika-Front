@@ -6,6 +6,7 @@ import { environment } from '../../../../environments/environment';
 
 import { Unit } from '../model/unit.model';
 import { CreateUnitResource } from '../model/create-unit-resource.model';
+import { UpdateUnitResource } from '../model/update-unit-resource.model';
 
 @Injectable({
   providedIn: 'root'
@@ -25,6 +26,21 @@ export class UnitsService extends BaseService<Unit> {
     ).pipe(
       catchError(this.handleError)
     );
+  }
+
+  override update(
+    idUnit: number,
+    resource: UpdateUnitResource
+  ): Observable<Unit> {
+    return this.http.put<Unit>(
+      this.getUnitUrl(idUnit),
+      resource,
+      this.httpOptions
+    );
+  }
+
+  getUnitUrl(idUnit: number): string {
+    return `${this.resourcePath()}/${idUnit}`;
   }
 
   getByBuildingId(idBuilding: number): Observable<Unit[]> {

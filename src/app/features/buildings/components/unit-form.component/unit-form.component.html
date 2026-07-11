@@ -22,7 +22,7 @@
         class="close-btn"
         type="button"
         (click)="onCancel()"
-        [disabled]="isSubmitting">
+        [disabled]="isSaving">
         ×
       </button>
     </header>
@@ -169,6 +169,18 @@
             ">
             Total area must be greater than or equal to 0.
           </small>
+
+          <small
+            class="error-text"
+            *ngIf="
+              unitForm.hasError('totalAreaLessThanCoveredArea') &&
+              (
+                unitForm.get('totalArea')?.touched ||
+                unitForm.get('coveredArea')?.touched
+              )
+            ">
+            Total area must be greater than or equal to covered area.
+          </small>
         </div>
 
         <!-- Participación -->
@@ -239,6 +251,15 @@
               MAINTENANCE
             </option>
           </select>
+
+          <small
+            class="error-text"
+            *ngIf="
+              unitForm.get('status')?.invalid &&
+              unitForm.get('status')?.touched
+            ">
+            Status must be AVAILABLE, OCCUPIED or MAINTENANCE.
+          </small>
         </div>
 
         <!-- Propietario -->
@@ -301,7 +322,7 @@
           type="button"
           class="btn secondary"
           (click)="onCancel()"
-          [disabled]="isSubmitting">
+          [disabled]="isSaving">
 
           Cancel
         </button>
@@ -311,13 +332,13 @@
           class="btn primary"
           [disabled]="
             unitForm.invalid ||
-            isSubmitting ||
+            isSaving ||
             isLoadingData ||
             buildings.length === 0
           ">
 
           {{
-            isSubmitting
+            isSaving
               ? 'Saving...'
               : isCreateMode
                 ? 'Create Unit'

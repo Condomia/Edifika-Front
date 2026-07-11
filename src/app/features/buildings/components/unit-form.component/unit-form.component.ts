@@ -7,10 +7,13 @@ import {
 } from '@angular/core';
 
 import { CommonModule } from '@angular/common';
+import { HttpErrorResponse } from '@angular/common/http';
 import {
+  AbstractControl,
   FormBuilder,
   FormGroup,
   ReactiveFormsModule,
+  ValidationErrors,
   Validators
 } from '@angular/forms';
 
@@ -21,6 +24,7 @@ import { Building } from '../../model/building.model';
 import { User } from '../../../users/model/user.model';
 import { UserUnit } from '../../model/user-unit.model';
 import { CreateUnitResource } from '../../model/create-unit-resource.model';
+import { UpdateUnitResource } from '../../model/update-unit-resource.model';
 
 import { UnitsService } from '../../services/units.service';
 import { BuildingsService } from '../../services/buildings.service';
@@ -48,9 +52,15 @@ export class UnitFormComponent implements OnInit {
   owners: User[] = [];
   buildings: Building[] = [];
 
-  isSubmitting = false;
+  isSaving = false;
   isLoadingData = false;
   errorMessage = '';
+
+  private readonly validStatuses = [
+    'AVAILABLE',
+    'OCCUPIED',
+    'MAINTENANCE'
+  ];
 
   constructor(
     private fb: FormBuilder,
@@ -71,67 +81,78 @@ export class UnitFormComponent implements OnInit {
         ? this.unit.idBuilding
         : null;
 
-    this.unitForm = this.fb.group({
-      idBuilding: [
-        currentBuildingId,
-        Validators.required
-      ],
+    this.unitForm = this.fb.group(
+      {
+        idBuilding: [
+          currentBuildingId,
+          [
+            Validators.required,
+            Validators.min(1)
+          ]
+        ],
 
-      unitNumber: [
-        this.unit?.unitNumber ?? 0,
-        [
-          Validators.required,
-          Validators.min(0)
-        ]
-      ],
+        unitNumber: [
+          this.unit?.unitNumber ?? 0,
+          [
+            Validators.required,
+            Validators.min(1)
+          ]
+        ],
 
-      floor: [
-        this.unit?.floor ?? 0,
-        [
-          Validators.required,
-          Validators.min(0)
-        ]
-      ],
+        floor: [
+          this.unit?.floor ?? 0,
+          [
+            Validators.required,
+            Validators.min(0)
+          ]
+        ],
 
-      coveredArea: [
-        this.unit?.coveredArea ?? 0,
-        [
-          Validators.required,
-          Validators.min(0)
-        ]
-      ],
+        coveredArea: [
+          this.unit?.coveredArea ?? 0,
+          [
+            Validators.required,
+            Validators.min(0)
+          ]
+        ],
 
-      totalArea: [
-        this.unit?.totalArea ?? 0,
-        [
-          Validators.required,
-          Validators.min(0)
-        ]
-      ],
+        totalArea: [
+          this.unit?.totalArea ?? 0,
+          [
+            Validators.required,
+            Validators.min(0)
+          ]
+        ],
 
-      participationPercentage: [
-        this.unit?.participationPercentage ?? 0,
-        [
-          Validators.required,
-          Validators.min(0)
-        ]
-      ],
+        participationPercentage: [
+          this.unit?.participationPercentage ?? 0,
+          [
+            Validators.required,
+            Validators.min(0)
+          ]
+        ],
 
-      distributionPercentage: [
-        this.unit?.distributionPercentage ?? 0,
-        [
-          Validators.required,
-          Validators.min(0)
-        ]
-      ],
+        distributionPercentage: [
+          this.unit?.distributionPercentage ?? 0,
+          [
+            Validators.required,
+            Validators.min(0)
+          ]
+        ],
 
-      status: [
-        this.unit?.status ?? 'AVAILABLE',
-        Validators.required
-      ],
+        status: [
+          this.unit?.status ?? 'AVAILABLE',
+          [
+            Validators.required,
+            this.statusValidator.bind(this)
+          ]
+        ],
 
-      idUser: [null]
-    });
+        idUser: [null]
+      },
+      {
+        validators: this.areaValidator
+      }
+    );
   }
 
   loadFormData(): void {
@@ -181,12 +202,16 @@ export class UnitFormComponent implements OnInit {
   }
 
   onSubmit(): void {
+    if (this.isSaving) {
+      return;
+    }
+
     if (this.unitForm.invalid) {
       this.unitForm.markAllAsTouched();
       return;
     }
 
-    this.isSubmitting = true;
+    this.isSaving = true;
     this.errorMessage = '';
 
     if (this.isCreateMode) {
@@ -200,20 +225,8 @@ export class UnitFormComponent implements OnInit {
   createUnit(): void {
     const formValue = this.unitForm.getRawValue();
 
-    const resource: CreateUnitResource = {
-      idBuilding: Number(formValue.idBuilding),
-      unitNumber: Number(formValue.unitNumber),
-      floor: Number(formValue.floor),
-      coveredArea: Number(formValue.coveredArea),
-      totalArea: Number(formValue.totalArea),
-      participationPercentage: Number(
-        formValue.participationPercentage
-      ),
-      distributionPercentage: Number(
-        formValue.distributionPercentage
-      ),
-      status: formValue.status
-    };
+    const resource: CreateUnitResource =
+      this.buildUnitResource();
 
     console.log(
       'Creating unit with body:',
@@ -248,7 +261,7 @@ export class UnitFormComponent implements OnInit {
             ? 'No tienes autorización para crear unidades.'
             : 'No se pudo crear la unidad. Verifica los datos ingresados.';
 
-        this.isSubmitting = false;
+        this.isSaving = false;
       }
     });
   }
@@ -281,28 +294,124 @@ export class UnitFormComponent implements OnInit {
         this.errorMessage =
           'La unidad fue creada, pero no se pudo asignar el propietario.';
 
-        this.isSubmitting = false;
+        this.isSaving = false;
       }
     });
   }
 
   updateUnit(): void {
-    this.errorMessage =
-      'No existe endpoint backend para actualizar unidades.';
+    const idUnit =
+      Number(this.unit?.idUnit);
 
-    this.isSubmitting = false;
+    if (!Number.isFinite(idUnit) || idUnit <= 0) {
+      this.errorMessage =
+        'No se puede actualizar la unidad porque no tiene un ID valido.';
+
+      this.isSaving = false;
+      return;
+    }
+
+    const resource: UpdateUnitResource =
+      this.buildUnitResource();
+
+    const url =
+      this.unitsService.getUnitUrl(idUnit);
+
+    this.unitsService
+      .update(idUnit, resource)
+      .subscribe({
+        next: () => {
+          this.finish();
+        },
+
+        error: (error: HttpErrorResponse) => {
+          console.error(
+            'Error updating unit:',
+            {
+              url,
+              idUnit,
+              body: resource,
+              status: error?.status,
+              backendResponse: error?.error
+            }
+          );
+
+          this.errorMessage =
+            'No se pudo actualizar la unidad. Verifica los datos ingresados.';
+
+          this.isSaving = false;
+        }
+      });
   }
 
   finish(): void {
-    this.isSubmitting = false;
+    this.isSaving = false;
     this.close.emit(true);
   }
 
   onCancel(): void {
-    if (this.isSubmitting) {
+    if (this.isSaving) {
       return;
     }
 
     this.close.emit(false);
+  }
+
+  private buildUnitResource(): UpdateUnitResource {
+    const formValue =
+      this.unitForm.getRawValue();
+
+    return {
+      idBuilding: Number(formValue.idBuilding),
+      unitNumber: Number(formValue.unitNumber),
+      floor: Number(formValue.floor),
+      coveredArea: Number(formValue.coveredArea),
+      totalArea: Number(formValue.totalArea),
+      participationPercentage: Number(
+        formValue.participationPercentage
+      ),
+      distributionPercentage: Number(
+        formValue.distributionPercentage
+      ),
+      status: String(formValue.status)
+    };
+  }
+
+  private statusValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    return this.validStatuses.includes(
+      String(control.value)
+    )
+      ? null
+      : {
+        invalidStatus: true
+      };
+  }
+
+  private areaValidator(
+    control: AbstractControl
+  ): ValidationErrors | null {
+    const coveredArea =
+      Number(
+        control.get('coveredArea')?.value
+      );
+
+    const totalArea =
+      Number(
+        control.get('totalArea')?.value
+      );
+
+    if (
+      Number.isFinite(coveredArea) &&
+      Number.isFinite(totalArea) &&
+      totalArea < coveredArea
+    ) {
+      return {
+        totalAreaLessThanCoveredArea: true
+      };
+    }
+
+    return null;
   }
 }
