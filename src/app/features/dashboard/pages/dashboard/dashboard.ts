@@ -1,219 +1,290 @@
-import { Component, inject, OnInit } from '@angular/core';
-import { CommonModule, DatePipe } from '@angular/common';
-import { RouterModule } from '@angular/router';
-import { forkJoin, map, of, switchMap } from 'rxjs';
+import { Injectable, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
+import {
+  Observable,
+  catchError,
+  map,
+  of
+} from 'rxjs';
 
-import { ReservationService } from '../../../reservations/services/reservation.service';
-import { CommonAreaService } from '../../../reservations/services/common-area.service';
-import { DashboardService } from '../../services/dashboard.service';
-import { LoginService } from '../../../auth/services/login-service';
+import { environment} from '../../../../../environments/environment';
 
-@Component({
-  selector: 'app-dashboard',
-  standalone: true,
-  imports: [CommonModule, RouterModule],
-  providers: [DatePipe],
-  templateUrl: './dashboard.html',
-  styleUrl: './dashboard.css'
+@Injectable({
+  providedIn: 'root'
 })
-export class Dashboard implements OnInit {
-  private reservationService = inject(ReservationService);
-  private commonAreaService = inject(CommonAreaService);
-  private dashboardService = inject(DashboardService);
-  private loginService = inject(LoginService);
-  private datePipe = inject(DatePipe);
+export class DashboardService {
+  private readonly http = inject(HttpClient);
 
-  currentDate = new Date();
-  
-  currentUser: any;
+  private readonly serverBaseUrl =
+    environment.serverBaseUrl.replace(/\/+$/, '');
 
-  occupancyRate = 0;
-  occupiedUnits = 0;
-  totalUnits = 0;
+  /**
+   * Obtiene los posts del muro comunitario.
+   */
+  getPosts(): Observable<any[]> {
+    const url =
+      `${this.serverBaseUrl}` +
+      `${environment.postEndpointPath}`;
 
-  pendingDebtsCount = 0;
-  pendingDebtsAmount = 0;
-  totalCollected = 0;
-  delinquencyRate = 0;
-
-  pendingReservations: any[] = [];
-  communityPosts: any[] = [];
-
-  selectedPeriod = '6';
-  chartLabels: string[] = [];
-  monthlyRevenue: { month: string, amount: number }[] = [];
-  maxRevenue = 0;
-  allPayments: any[] = [];
-  allDebts: any[] = [];
-
-  ngOnInit(): void {
-    this.currentUser = this.loginService.getCurrentUser();
-    this.generateChartLabels();
-    this.loadOccupancy();
-    this.loadFinancials();
-    this.loadReservations();
-    this.loadCommunityWall();
-  }
-
-  loadOccupancy(): void {
-    const buildingId = this.currentUser?.buildingId ?? 1;
-    const fetchUnits = this.dashboardService.getUnitsByBuilding(buildingId);
-
-    fetchUnits.subscribe(units => {
-      this.totalUnits = units.length;
-      this.occupiedUnits = units.filter(u => u.status === 'OCCUPIED').length;
-      this.occupancyRate = this.totalUnits
-        ? Math.round((this.occupiedUnits / this.totalUnits) * 100)
-        : 0;
-    });
-  }
-
-  loadFinancials(): void {
-    const buildingId = this.currentUser?.buildingId ?? 1;
-    
-    forkJoin({
-      units: this.dashboardService.getUnitsByBuilding(buildingId),
-      residents: this.dashboardService.getResidentsByBuilding(buildingId)
-    }).pipe(
-      switchMap(({ units, residents }) => {
-        const debtRequests = units.map(unit =>
-          this.dashboardService.getDebtsByUnit(Number(unit.idUnit ?? unit.id))
+    return this.http.get<any>(url).pipe(
+      map(response => this.extractList(response)),
+      catchError(error => {
+        console.error(
+          'Error obteniendo los posts:',
+          error
         );
 
-        const userIds = Array.from(
-          new Set(
-            residents
-              .map(resident => Number(resident.idUser ?? resident.userId ?? 0))
-              .filter(userId => userId > 0)
-          )
-        );
-
-        const paymentRequests = userIds.map(userId =>
-          this.dashboardService.getPaymentsByUser(userId)
-        );
-
-        return forkJoin({
-          units: of(units),
-          debts: debtRequests.length
-            ? forkJoin(debtRequests).pipe(map(groups => groups.flat()))
-            : of([]),
-          payments: paymentRequests.length
-            ? forkJoin(paymentRequests).pipe(map(groups => groups.flat()))
-            : of([])
-        });
+        return of([]);
       })
-    ).subscribe(({ payments, debts, units }) => {
-      const unitIds = units.map(u => u.idUnit || u.id);
-      
-      const filteredDebts = debts.filter(d => unitIds.includes(d.unitId));
-      this.allDebts = filteredDebts;
-      const debtIds = filteredDebts.map(d => d.id);
-      
-      const filteredPayments = payments.filter(p => debtIds.includes(p.debtId));
-      this.allPayments = filteredPayments;
-
-      this.totalCollected = filteredPayments
-        .filter(p => p.status === 'PAID')
-        .reduce((sum, p) => sum + Number(p.amount), 0);
-
-      const pendingDebts = filteredDebts.filter(d => d.status === 'PENDING');
-      this.pendingDebtsCount = pendingDebts.length;
-      this.pendingDebtsAmount = pendingDebts.reduce((sum, d) => sum + Number(d.amount), 0);
-
-      const totalDebt = filteredDebts.reduce((sum, d) => sum + Number(d.amount), 0);
-      const totalExpected = this.totalCollected + totalDebt;
-
-      this.delinquencyRate = totalExpected
-        ? Number(((totalDebt / totalExpected) * 100).toFixed(1))
-        : 0;
-
-      this.generateChartLabels();
-    });
+    );
   }
 
-  loadReservations(): void {
-    // Currently, common areas don't have a buildingId in db.json. 
-    // We will leave reservations global or filter them if the model allows.
-    // For now, keeping it global to match the previous structure unless a building relationship exists.
-    forkJoin({
-      reservations: this.reservationService.getAll(),
-      commonAreas: this.commonAreaService.getAll()
-    }).subscribe(({ reservations, commonAreas }) => {
-      const activeReservations = reservations
-        .filter(r => r.status === 'ACTIVE')
-        .slice(0, 3);
+  /**
+   * Obtiene todas las unidades.
+   *
+   * GET /api/v1/residential/units
+   */
+  getAllUnits(): Observable<any[]> {
+    const url =
+      `${this.serverBaseUrl}` +
+      `${environment.unitEndpointPath}`;
 
-      this.pendingReservations = activeReservations.map(reservation => {
-        const area = commonAreas.find(
-          area => Number(area.id) === Number(reservation.commonAreaId)
+    return this.http.get<any>(url).pipe(
+      map(response => this.extractList(response)),
+      catchError(error => {
+        console.error(
+          'Error obteniendo todas las unidades:',
+          error
         );
 
-        return {
-          ...reservation,
-          areaName: area?.name ?? 'Unknown Area',
-          formattedDate:
-            this.datePipe.transform(reservation.reservationDate, 'MMM d') +
-            ' • ' +
-            reservation.timeSlot +
-            ':00'
-        };
-      });
-    });
+        return of([]);
+      })
+    );
   }
 
-  loadCommunityWall(): void {
-    // Wall posts can be global across the community
-    this.dashboardService.getPosts().subscribe(posts => {
-      this.communityPosts = posts.slice(0, 5);
-    });
-  }
-
-  updateReservationStatus(id: number | string, status: string): void {
-    if (status !== 'REJECTED') {
-      console.warn('No backend endpoint exists to approve reservations.');
-      return;
+  /**
+   * Obtiene las unidades de un edificio.
+   *
+   * Cuando buildingId es null, se obtienen todas
+   * las unidades. Esto se usa para administradores
+   * que no tienen un edificio asignado.
+   */
+  getUnitsByBuilding(
+    buildingId: number | null
+  ): Observable<any[]> {
+    if (buildingId === null) {
+      return this.getAllUnits();
     }
 
-    this.reservationService.cancelReservation(id).subscribe({
-      next: () => {
-        this.loadReservations();
-      },
-      error: (err) => console.error('Error updating reservation status', err)
-    });
+    const url =
+      `${this.serverBaseUrl}` +
+      `${environment.residentialEndpointPath}` +
+      `/buildings/${buildingId}/units`;
+
+    return this.http.get<any>(url).pipe(
+      map(response => this.extractList(response)),
+
+      catchError(error => {
+        console.warn(
+          'Falló la consulta de unidades por edificio. ' +
+          'Se consultarán todas las unidades.',
+          error
+        );
+
+        return this.getAllUnits().pipe(
+          map(units => {
+            const unitsWithBuildingId =
+              units.filter(unit =>
+                this.getUnitBuildingId(unit) !== null
+              );
+
+            /*
+             * Si las unidades no incluyen buildingId,
+             * no es posible filtrarlas localmente.
+             */
+            if (unitsWithBuildingId.length === 0) {
+              return units;
+            }
+
+            return units.filter(unit =>
+              this.getUnitBuildingId(unit) === buildingId
+            );
+          })
+        );
+      })
+    );
   }
 
-  setPeriod(period: string) {
-    this.selectedPeriod = period;
-    this.generateChartLabels();
+  /**
+   * Obtiene todas las relaciones entre
+   * usuarios y unidades.
+   *
+   * GET /api/v1/residential/user-units
+   */
+  getAllResidents(): Observable<any[]> {
+    const url =
+      `${this.serverBaseUrl}` +
+      `${environment.userUnitEndpointPath}`;
+
+    return this.http.get<any>(url).pipe(
+      map(response => this.extractList(response)),
+      catchError(error => {
+        console.error(
+          'Error obteniendo residentes:',
+          error
+        );
+
+        return of([]);
+      })
+    );
   }
 
-  generateChartLabels() {
-    const monthlyMap = new Map<string, number>();
-    
-    this.allPayments.forEach(p => {
-      if (p.status === 'PAID') {
-        const d = new Date(p.paymentDate);
-        const monthName = d.toLocaleString('en-US', { month: 'short' }).toUpperCase();
-        monthlyMap.set(monthName, (monthlyMap.get(monthName) || 0) + p.amount);
-      }
-    });
-
-    const monthsCount = parseInt(this.selectedPeriod, 10);
-    const labels = [];
-    const d = new Date();
-    for (let i = monthsCount - 1; i >= 0; i--) {
-      const pastDate = new Date(d.getFullYear(), d.getMonth() - i, 1);
-      labels.push(pastDate.toLocaleString('en-US', { month: 'short' }).toUpperCase());
+  /**
+   * Obtiene los residentes relacionados
+   * con un edificio.
+   *
+   * GET
+   * /api/v1/residential/buildings/{buildingId}/residents
+   */
+  getResidentsByBuilding(
+    buildingId: number | null
+  ): Observable<any[]> {
+    if (buildingId === null) {
+      return this.getAllResidents();
     }
-    
-    this.chartLabels = labels;
-    
-    this.monthlyRevenue = labels.map(m => ({
-      month: m,
-      amount: monthlyMap.get(m) || 0
-    }));
 
-    this.maxRevenue = Math.max(...this.monthlyRevenue.map(m => m.amount));
-    if (this.maxRevenue === 0) this.maxRevenue = 100000;
+    const url =
+      `${this.serverBaseUrl}` +
+      `${environment.residentialEndpointPath}` +
+      `/buildings/${buildingId}/residents`;
+
+    return this.http.get<any>(url).pipe(
+      map(response => this.extractList(response)),
+
+      catchError(error => {
+        console.warn(
+          'Falló la consulta de residentes por edificio. ' +
+          'Se consultarán todos los residentes.',
+          error
+        );
+
+        return this.getAllResidents();
+      })
+    );
+  }
+
+  /**
+   * Obtiene las deudas de una unidad.
+   *
+   * GET /api/v1/payments/debts/unit/{unitId}
+   */
+  getDebtsByUnit(
+    unitId: number
+  ): Observable<any[]> {
+    const url =
+      `${this.serverBaseUrl}` +
+      `${environment.paymentEndpointPath}` +
+      `/debts/unit/${unitId}`;
+
+    return this.http.get<any>(url).pipe(
+      map(response => this.extractList(response)),
+      catchError(error => {
+        console.error(
+          `Error obteniendo las deudas de la unidad ${unitId}:`,
+          error
+        );
+
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Obtiene los pagos realizados por un usuario.
+   *
+   * GET /api/v1/payments/user/{userId}
+   */
+  getPaymentsByUser(
+    userId: number
+  ): Observable<any[]> {
+    const url =
+      `${this.serverBaseUrl}` +
+      `${environment.paymentEndpointPath}` +
+      `/user/${userId}`;
+
+    return this.http.get<any>(url).pipe(
+      map(response => this.extractList(response)),
+      catchError(error => {
+        console.error(
+          `Error obteniendo los pagos del usuario ${userId}:`,
+          error
+        );
+
+        return of([]);
+      })
+    );
+  }
+
+  /**
+   * Soporta diferentes estructuras de respuesta:
+   *
+   * []
+   * { content: [] }
+   * { data: [] }
+   * { units: [] }
+   * { residents: [] }
+   * { payments: [] }
+   * { debts: [] }
+   * { posts: [] }
+   */
+  private extractList(response: any): any[] {
+    if (Array.isArray(response)) {
+      return response;
+    }
+
+    const possibleLists = [
+      response?.content,
+      response?.data,
+      response?.units,
+      response?.residents,
+      response?.userUnits,
+      response?.payments,
+      response?.debts,
+      response?.posts
+    ];
+
+    const list = possibleLists.find(
+      possibleList => Array.isArray(possibleList)
+    );
+
+    return list ?? [];
+  }
+
+  /**
+   * Obtiene el buildingId soportando
+   * diferentes nombres enviados por el backend.
+   */
+  private getUnitBuildingId(
+    unit: any
+  ): number | null {
+    const value =
+      unit.idBuilding ??
+      unit.buildingId ??
+      unit.building?.id ??
+      unit.building?.idBuilding;
+
+    if (
+      value === undefined ||
+      value === null ||
+      value === ''
+    ) {
+      return null;
+    }
+
+    const parsedValue = Number(value);
+
+    return Number.isNaN(parsedValue)
+      ? null
+      : parsedValue;
   }
 }
