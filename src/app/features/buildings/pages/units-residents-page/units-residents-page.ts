@@ -1,19 +1,33 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { forkJoin } from 'rxjs';
-import { UserFormComponent } from '../../../users/components/user-form/user-form.component';
-import { UsersService } from '../../../users/services/users.service';
-import { User } from '../../../users/model/user.model';
 
-import { UnitsService } from '../../services/units.service';
-import { BuildingsService } from '../../services/buildings.service';
-import { UserUnitsService } from '../../services/user-units.service';
+import { UserFormComponent } from
+    '../../../users/components/user-form/user-form.component';
 
-import { Unit } from '../../model/unit.model';
-import { Building } from '../../model/building.model';
-import { UserUnit } from '../../model/user-unit.model';
-import { UnitResidentView } from '../../model/unit-resident-view.model';
-import { UnitFormComponent } from '../../components/unit-form.component/unit-form.component';
+import { UsersService } from
+    '../../../users/services/users.service';
+
+import { User } from
+    '../../../users/model/user.model';
+
+import { UnitsService } from
+    '../../services/units.service';
+
+import { BuildingsService } from
+    '../../services/buildings.service';
+
+import { Unit } from
+    '../../model/unit.model';
+
+import { Building } from
+    '../../model/building.model';
+
+import { UnitResidentView } from
+    '../../model/unit-resident-view.model';
+
+import { UnitFormComponent } from
+    '../../components/unit-form.component/unit-form.component';
 
 @Component({
   selector: 'app-units-residents-page',
@@ -29,22 +43,23 @@ import { UnitFormComponent } from '../../components/unit-form.component/unit-for
 export class UnitsResidentsPage implements OnInit {
   rows: UnitResidentView[] = [];
   units: Unit[] = [];
+  owners: User[] = [];
 
   selectedUnit: Unit | null = null;
+
   isCreatingUnit = false;
   isEditingUnit = false;
+  isCreatingUser = false;
 
   totalUnits = 0;
   outstandingDebt = 0;
   newMoveIns = 0;
   maintenanceRequests = 0;
-  selectedUser: User | null = null;
-  isCreatingUser = false;
+
   constructor(
     private usersService: UsersService,
     private unitsService: UnitsService,
-    private buildingsService: BuildingsService,
-    private userUnitsService: UserUnitsService
+    private buildingsService: BuildingsService
   ) {}
 
   ngOnInit(): void {
@@ -55,56 +70,78 @@ export class UnitsResidentsPage implements OnInit {
     forkJoin({
       users: this.usersService.getAll(),
       units: this.unitsService.getAll(),
-      buildings: this.buildingsService.getAll(),
-      userUnits: this.userUnitsService.getAll()
+      buildings: this.buildingsService.getAll()
     }).subscribe({
-      next: ({ users, units, buildings, userUnits }) => {
-        this.totalUnits = units.length;
-        this.maintenanceRequests = units.filter(u => u.status === 'MAINTENANCE').length;
+      next: ({ users, units, buildings }) => {
+        this.owners = users.filter(user =>
+          user.roles?.some(
+            role => role.toUpperCase() === 'OWNER'
+          )
+        );
+
         this.units = units;
+        this.totalUnits = units.length;
+
+        this.maintenanceRequests = units.filter(
+          unit => unit.status === 'MAINTENANCE'
+        ).length;
+
+        this.newMoveIns = this.owners.filter(
+          owner => owner.status === 'PENDING'
+        ).length;
 
         this.rows = units.map(unit => {
-          const relation = userUnits.find(
-            uu => Number(uu.idUnit) === Number(unit.idUnit) && uu.status === 'ACTIVE'
-          );
-
-          const user = relation
-            ? users.find(u => Number(u.id) === Number(relation.idUser))
-            : undefined;
-
           const building = buildings.find(
-            b => Number(b.idBuilding) === Number(unit.idBuilding)
+            currentBuilding =>
+              Number(currentBuilding.idBuilding) ===
+              Number(unit.idBuilding)
           );
 
-          return this.toView(unit, building, user);
+          return this.toView(unit, building);
         });
 
-        this.outstandingDebt = this.rows.filter(r => r.debtStatus === 'LATE').length;
-        this.newMoveIns = userUnits.filter(uu => uu.status === 'ACTIVE').length;
+        this.outstandingDebt = this.rows.filter(
+          row => row.debtStatus === 'LATE'
+        ).length;
       },
-      error: err => console.error('Error loading units and residents:', err)
+
+      error: error => {
+        console.error(
+          'Error loading units and users:',
+          error
+        );
+      }
     });
   }
 
-  private toView(unit: Unit, building?: Building, user?: User): UnitResidentView {
-    const hasResident = !!user;
-
+  private toView(
+    unit: Unit,
+    building?: Building
+  ): UnitResidentView {
     return {
       unitId: unit.idUnit,
       unitNumber: unit.unitNumber,
-      tower: building?.name ?? 'Tower A',
-      unitStatus: hasResident ? 'OCCUPIED' : 'VACANT',
 
-      residentId: user?.id,
-      residentName: user?.fullName ?? 'No Resident',
-      residentRole: user?.roles?.[0] ?? 'In transition',
-      email: user?.email ?? '—',
-      phone: user?.phone ?? '',
+      tower:
+        building?.name ??
+        'Tower A',
 
-      debtStatus: hasResident ? 'PAID' : 'N/A',
-      debtLabel: hasResident ? 'PAID' : 'N/A'
+      unitStatus:
+        unit.status === 'MAINTENANCE'
+          ? 'MAINTENANCE'
+          : 'VACANT',
+
+      residentId: undefined,
+      residentName: 'No Resident',
+      residentRole: 'Not assigned',
+      email: '—',
+      phone: '',
+
+      debtStatus: 'N/A',
+      debtLabel: 'N/A'
     };
   }
+
   createUser(): void {
     this.isCreatingUser = true;
   }
@@ -116,9 +153,21 @@ export class UnitsResidentsPage implements OnInit {
       this.loadData();
     }
   }
+
   editRow(row: UnitResidentView): void {
-    this.selectedUnit = this.units.find(u => Number(u.idUnit) === Number(row.unitId)) ?? null;
+    this.selectedUnit =
+      this.units.find(
+        unit =>
+          Number(unit.idUnit) ===
+          Number(row.unitId)
+      ) ?? null;
+
+    if (!this.selectedUnit) {
+      return;
+    }
+
     this.isEditingUnit = true;
+    this.isCreatingUnit = false;
   }
 
   createUnit(): void {
@@ -136,6 +185,7 @@ export class UnitsResidentsPage implements OnInit {
     };
 
     this.isCreatingUnit = true;
+    this.isEditingUnit = false;
   }
 
   onUnitFormClose(refresh: boolean): void {

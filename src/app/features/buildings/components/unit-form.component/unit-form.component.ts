@@ -1,32 +1,54 @@
-import { Component, EventEmitter, Input, OnInit, Output } from '@angular/core';
+import {
+  Component,
+  EventEmitter,
+  Input,
+  OnInit,
+  Output
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
-import { FormBuilder, FormGroup, ReactiveFormsModule, Validators } from '@angular/forms';
-import { forkJoin } from 'rxjs';
+
+import {
+  FormBuilder,
+  FormGroup,
+  ReactiveFormsModule,
+  Validators
+} from '@angular/forms';
 
 import { Unit } from '../../model/unit.model';
 import { User } from '../../../users/model/user.model';
 import { UserUnit } from '../../model/user-unit.model';
 
 import { UnitsService } from '../../services/units.service';
-import { UserUnitsService } from '../../services/user-units.service';
-import { UsersService } from '../../../users/services/users.service';
+
+import { UserUnitsService } from
+    '../../services/user-units.service';
+
+import { UsersService } from
+    '../../../users/services/users.service';
 
 @Component({
   selector: 'app-unit-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule],
+  imports: [
+    CommonModule,
+    ReactiveFormsModule
+  ],
   templateUrl: './unit-form.component.html',
   styleUrl: './unit-form.component.css'
 })
 export class UnitFormComponent implements OnInit {
   @Input() unit!: Unit;
   @Input() isCreateMode = false;
+
   @Output() close = new EventEmitter<boolean>();
 
   unitForm!: FormGroup;
-  users: User[] = [];
-  currentUserUnit: UserUnit | null = null;
+
+  owners: User[] = [];
+
   isSubmitting = false;
+  errorMessage = '';
 
   constructor(
     private fb: FormBuilder,
@@ -37,44 +59,87 @@ export class UnitFormComponent implements OnInit {
 
   ngOnInit(): void {
     this.buildForm();
-    this.loadData();
+    this.loadOwners();
   }
 
   buildForm(): void {
     this.unitForm = this.fb.group({
-      unitNumber: [this.unit?.unitNumber ?? 0, [Validators.required, Validators.min(0)]],
-      floor: [this.unit?.floor ?? 0, [Validators.required, Validators.min(0)]],
-      coveredArea: [this.unit?.coveredArea ?? 0, [Validators.required, Validators.min(0)]],
-      totalArea: [this.unit?.totalArea ?? 0, [Validators.required, Validators.min(0)]],
-      participationPercentage: [this.unit?.participationPercentage ?? 0, [Validators.required, Validators.min(0)]],
-      distributionPercentage: [this.unit?.distributionPercentage ?? 0, [Validators.required, Validators.min(0)]],
-      status: [this.unit?.status ?? 'AVAILABLE', Validators.required],
+      unitNumber: [
+        this.unit?.unitNumber ?? 0,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+
+      floor: [
+        this.unit?.floor ?? 0,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+
+      coveredArea: [
+        this.unit?.coveredArea ?? 0,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+
+      totalArea: [
+        this.unit?.totalArea ?? 0,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+
+      participationPercentage: [
+        this.unit?.participationPercentage ?? 0,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+
+      distributionPercentage: [
+        this.unit?.distributionPercentage ?? 0,
+        [
+          Validators.required,
+          Validators.min(0)
+        ]
+      ],
+
+      status: [
+        this.unit?.status ?? 'AVAILABLE',
+        Validators.required
+      ],
+
       idUser: ['']
     });
   }
 
-  loadData(): void {
-    forkJoin({
-      users: this.usersService.getAll(),
-      userUnits: this.userUnitsService.getAll()
-    }).subscribe({
-      next: ({ users, userUnits }) => {
-        this.users = users.filter(user =>
-          user.status === 'ACTIVE' &&
-          user.roles?.some(role => role === 'OWNER' || role === 'TENANT')
+  loadOwners(): void {
+    this.usersService.getAll().subscribe({
+      next: users => {
+        this.owners = users.filter(user =>
+          user.roles?.some(
+            role => role.toUpperCase() === 'OWNER'
+          )
+        );
+      },
+
+      error: error => {
+        console.error(
+          'Error loading owners:',
+          error
         );
 
-        this.currentUserUnit =
-          userUnits.find(uu =>
-            Number(uu.idUnit) === Number(this.unit.idUnit) &&
-            uu.status === 'ACTIVE'
-          ) ?? null;
-
-        this.unitForm.patchValue({
-          idUser: this.currentUserUnit?.idUser ?? ''
-        });
-      },
-      error: err => console.error('Error loading unit form data:', err)
+        this.errorMessage =
+          'No se pudieron cargar los propietarios.';
+      }
     });
   }
 
@@ -85,148 +150,173 @@ export class UnitFormComponent implements OnInit {
     }
 
     this.isSubmitting = true;
+    this.errorMessage = '';
 
     if (this.isCreateMode) {
       this.createUnit();
-    } else {
-      this.updateUnit();
+      return;
     }
+
+    this.updateUnit();
   }
 
   createUnit(): void {
-    const formValue = this.unitForm.value;
-    const newId = Date.now();
+    const formValue = this.unitForm.getRawValue();
+    const temporaryId = Date.now();
 
     const newUnit: Unit = {
-      id: newId,
-      idUnit: newId,
-      idBuilding: this.unit?.idBuilding ?? 1,
-      unitNumber: Number(formValue.unitNumber),
-      floor: Number(formValue.floor),
-      coveredArea: Number(formValue.coveredArea),
-      totalArea: Number(formValue.totalArea),
-      participationPercentage: Number(formValue.participationPercentage),
-      distributionPercentage: Number(formValue.distributionPercentage),
-      status: formValue.status
+      id: temporaryId,
+      idUnit: temporaryId,
+
+      idBuilding:
+        this.unit?.idBuilding ??
+        1,
+
+      unitNumber:
+        Number(formValue.unitNumber),
+
+      floor:
+        Number(formValue.floor),
+
+      coveredArea:
+        Number(formValue.coveredArea),
+
+      totalArea:
+        Number(formValue.totalArea),
+
+      participationPercentage:
+        Number(formValue.participationPercentage),
+
+      distributionPercentage:
+        Number(formValue.distributionPercentage),
+
+      status:
+      formValue.status
     };
 
     this.unitsService.create(newUnit).subscribe({
-      next: () => {
-        const selectedUserId = Number(formValue.idUser);
+      next: createdUnit => {
+        const selectedOwnerId =
+          Number(formValue.idUser);
 
-        if (selectedUserId > 0) {
-          const newRelation: UserUnit = {
-            id: Date.now(),
-            idUserUnit: Date.now(),
-            idBuilding: newUnit.idBuilding,
-            idUnit: newId,
-            idUser: selectedUserId,
-            startDate: new Date().toISOString(),
-            endDate: null,
-            status: 'ACTIVE'
-          };
-
-          this.userUnitsService.create(newRelation).subscribe({
-            next: () => this.finish(),
-            error: err => {
-              console.error('Error assigning resident:', err);
-              this.isSubmitting = false;
-            }
-          });
-        } else {
+        if (selectedOwnerId <= 0) {
           this.finish();
+          return;
         }
+
+        const createdUnitId = Number(
+          createdUnit?.idUnit ??
+          createdUnit?.id ??
+          newUnit.idUnit
+        );
+
+        this.assignOwnerToUnit(
+          selectedOwnerId,
+          createdUnitId,
+          newUnit.idBuilding
+        );
       },
-      error: err => {
-        console.error(err);
+
+      error: error => {
+        console.error(
+          'Error creating unit:',
+          error
+        );
+
+        this.errorMessage =
+          'No se pudo crear la unidad.';
+
         this.isSubmitting = false;
       }
     });
   }
 
-  updateUnit(): void {
-    const formValue = this.unitForm.value;
-
-    const updatedUnit: Unit = {
-      ...this.unit,
-      unitNumber: Number(formValue.unitNumber),
-      floor: Number(formValue.floor),
-      coveredArea: Number(formValue.coveredArea),
-      totalArea: Number(formValue.totalArea),
-      participationPercentage: Number(formValue.participationPercentage),
-      distributionPercentage: Number(formValue.distributionPercentage),
-      status: formValue.status
-    };
-
-    this.unitsService.update(this.unit.id!, updatedUnit).subscribe({
-      next: () => this.updateUserUnit(Number(formValue.idUser)),
-      error: err => {
-        console.error('Error updating unit:', err);
-        this.isSubmitting = false;
-      }
-    });
-  }
-
-  updateUserUnit(newUserId: number): void {
-    const hasSelectedUser = newUserId > 0;
-
-    if (!this.currentUserUnit && !hasSelectedUser) {
-      this.finish();
-      return;
-    }
-
-    if (this.currentUserUnit && !hasSelectedUser) {
-      const inactiveRelation: UserUnit = {
-        ...this.currentUserUnit,
-        status: 'INACTIVE',
-        endDate: new Date().toISOString()
-      };
-
-      this.userUnitsService.update(this.currentUserUnit.id!, inactiveRelation).subscribe({
-        next: () => this.finish(),
-        error: err => {
-          console.error('Error removing resident:', err);
-          this.isSubmitting = false;
-        }
-      });
-
-      return;
-    }
-
-    if (this.currentUserUnit && hasSelectedUser) {
-      const updatedRelation: UserUnit = {
-        ...this.currentUserUnit,
-        idUser: newUserId,
-        status: 'ACTIVE',
-        endDate: null
-      };
-
-      this.userUnitsService.update(this.currentUserUnit.id!, updatedRelation).subscribe({
-        next: () => this.finish(),
-        error: err => {
-          console.error('Error changing resident:', err);
-          this.isSubmitting = false;
-        }
-      });
-
-      return;
-    }
+  private assignOwnerToUnit(
+    ownerId: number,
+    unitId: number,
+    buildingId: number
+  ): void {
+    const relationId = Date.now();
 
     const newRelation: UserUnit = {
-      id: Date.now(),
-      idUserUnit: Date.now(),
-      idBuilding: this.unit.idBuilding,
-      idUnit: this.unit.idUnit,
-      idUser: newUserId,
+      id: relationId,
+      idUserUnit: relationId,
+      idBuilding: buildingId,
+      idUnit: unitId,
+      idUser: ownerId,
       startDate: new Date().toISOString(),
       endDate: null,
       status: 'ACTIVE'
     };
 
     this.userUnitsService.create(newRelation).subscribe({
-      next: () => this.finish(),
-      error: err => {
-        console.error('Error assigning resident:', err);
+      next: () => {
+        this.finish();
+      },
+
+      error: error => {
+        console.error(
+          'Error assigning owner:',
+          error
+        );
+
+        this.errorMessage =
+          'La unidad fue creada, pero no se pudo asignar el propietario.';
+
+        this.isSubmitting = false;
+      }
+    });
+  }
+
+  updateUnit(): void {
+    const formValue = this.unitForm.getRawValue();
+
+    const updatedUnit: Unit = {
+      ...this.unit,
+
+      unitNumber:
+        Number(formValue.unitNumber),
+
+      floor:
+        Number(formValue.floor),
+
+      coveredArea:
+        Number(formValue.coveredArea),
+
+      totalArea:
+        Number(formValue.totalArea),
+
+      participationPercentage:
+        Number(formValue.participationPercentage),
+
+      distributionPercentage:
+        Number(formValue.distributionPercentage),
+
+      status:
+      formValue.status
+    };
+
+    const unitId =
+      this.unit.id ??
+      this.unit.idUnit;
+
+    this.unitsService.update(
+      unitId,
+      updatedUnit
+    ).subscribe({
+      next: () => {
+        this.finish();
+      },
+
+      error: error => {
+        console.error(
+          'Error updating unit:',
+          error
+        );
+
+        this.errorMessage =
+          'No se pudo actualizar la unidad.';
+
         this.isSubmitting = false;
       }
     });
@@ -238,6 +328,10 @@ export class UnitFormComponent implements OnInit {
   }
 
   onCancel(): void {
+    if (this.isSubmitting) {
+      return;
+    }
+
     this.close.emit(false);
   }
 }
