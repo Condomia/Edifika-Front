@@ -47,6 +47,15 @@ export class UserUnitsService extends BaseService<UserUnit> {
       catchError(this.handleError)
     );
   }
+  getByBuildingId(
+    buildingId: number
+  ): Observable<UserUnit[]> {
+    return this.http.get<UserUnit[]>(
+      `${environment.serverBaseUrl}` +
+      `${environment.residentialEndpointPath}` +
+      `/buildings/${buildingId}/residents`
+    );
+  }
 
   moveUserToUnit(idUser: number, newIdUnit: number, moveDate: string): Observable<UserUnit> {
     return this.http.put<UserUnit>(
