@@ -1,113 +1,35 @@
-import { Component, OnInit, inject } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import {
+  Component,
+  OnInit,
+  inject
+} from '@angular/core';
+
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { forkJoin } from 'rxjs';
-import { environment } from '../../../environments/environment.production';
 
-interface Debt {
-  id: number;
-  unitId?: number;
-  idUnit?: number;
-  description: string;
-  amount: number;
-  currency: string;
-  dueDate: string;
-  status: string;
-}
+import {
+  Observable,
+  catchError,
+  forkJoin,
+  map,
+  of,
+  switchMap
+} from 'rxjs';
 
-interface Payment {
-  id: number;
-  debtId: number;
-  userId?: number;
-  idUser?: number;
-  amount: number;
-  currency: string;
-  paymentDate: string;
-  paymentMethod: string;
-  status: string;
-}
+import { FinanceService } from '../../features/finance/services/finance.service';
 
-interface Unit {
-  id: number;
-  idBuilding?: number;
-  buildingId?: number;
-  unitNumber: number | string;
-  status: string;
-}
-
-interface UserUnit {
-  id: number;
-  idBuilding?: number;
-  buildingId?: number;
-  idUnit?: number;
-  unitId?: number;
-  idUser?: number;
-  userId?: number;
-  status: string;
-}
-
-interface User {
-  id: number;
-  fullName: string;
-  email?: string;
-}
-
-interface Building {
-  id: number;
-  name: string;
-}
-
-interface AreaFinancialReport {
-  idArea: number;
-  areaName?: string;
-  totalPagoGanadoPorArea: number;
-  totalVecesReservadas: number;
-}
-
-interface FinancialReport {
-  buildingId: number;
-
-  deudaTotal?: number;
-  deudaAtrasadaTotal?: number;
-  dineroRecolectadoPorPagoDeuda?: number;
-  dineroRecolectadoPorPagoDeAreas?: number;
-
-  collectionRate?: number;
-  porcentajeDeAtraso?: number;
-  occupancyRate?: number;
-
-  totalRevenue?: number;
-  pendingDues?: number;
-  pendingUnitsCount?: number;
-  arrears?: number;
-
-  areas?: AreaFinancialReport[];
-}
-
-interface OutstandingBalance {
-  debtId: number;
-  residentId: number | null;
-  unitId: number;
-
-  unitAndResident: string;
-  residentName: string;
-  initials: string;
-  unitDetails: string;
-  buildingName: string;
-
-  status: string;
-  statusClass: string;
-
-  lastPaymentDate: string;
-  amountDue: number;
-}
-
-interface CreateNotificationRequest {
-  userId: number;
-  title: string;
-  content: string;
-}
+import {
+  AreaFinancialReportResource,
+  Building,
+  CreateNotificationRequest,
+  Debt,
+  FinancialReportResource,
+  OutstandingBalance,
+  Payment,
+  Unit,
+  User,
+  UserUnit
+} from '../../features/finance/model/finance.models';
 
 @Component({
   selector: 'app-finance',
@@ -120,22 +42,24 @@ interface CreateNotificationRequest {
   styleUrl: './finance.css'
 })
 export class Finance implements OnInit {
-  private readonly http = inject(HttpClient);
+  private readonly financeService =
+    inject(FinanceService);
 
-  private readonly baseUrl = environment.serverBaseUrl;
-  private readonly reportPath =
-    environment.reportEndpointPath ?? '/api/v1/reports';
-
-  private readonly notificationPath =
-    environment.notificationEndpointPath ?? '/api/v1/notifications';
 
   totalRevenue = 0;
   pendingDues = 0;
-  pendingUnitsCount = 0;
   arrears = 0;
 
   collectionRate = 0;
+  overdueRate = 0;
+
+
   occupancyRate = 0;
+  pendingUnitsCount = 0;
+
+
+  areaReports: AreaFinancialReportResource[] = [];
+
 
   monthlyRevenue: {
     key: string;
@@ -147,7 +71,10 @@ export class Finance implements OnInit {
   selectedPeriod = '6';
 
   allPayments: Payment[] = [];
+
+
   outstandingBalances: OutstandingBalance[] = [];
+
 
   isLoading = false;
   errorMessage = '';
@@ -158,7 +85,8 @@ export class Finance implements OnInit {
   pageSize = 10;
   searchTerm = '';
 
-  sendingNotificationForDebtId: number | null = null;
+  sendingNotificationForDebtId:
+    number | null = null;
 
   currentDate = new Date();
 
@@ -166,23 +94,40 @@ export class Finance implements OnInit {
     this.fetchData();
   }
 
+
   get filteredBalances(): OutstandingBalance[] {
-    const term = this.searchTerm.trim().toLowerCase();
+    const term =
+      this.searchTerm.trim().toLowerCase();
 
     if (!term) {
       return this.outstandingBalances;
     }
 
-    return this.outstandingBalances.filter(balance =>
-      balance.residentName.toLowerCase().includes(term) ||
-      balance.unitDetails.toLowerCase().includes(term) ||
-      balance.unitAndResident.toLowerCase().includes(term) ||
-      balance.buildingName.toLowerCase().includes(term)
+    return this.outstandingBalances.filter(
+      balance =>
+        balance.residentName
+          .toLowerCase()
+          .includes(term) ||
+
+        balance.unitDetails
+          .toLowerCase()
+          .includes(term) ||
+
+        balance.unitAndResident
+          .toLowerCase()
+          .includes(term) ||
+
+        balance.buildingName
+          .toLowerCase()
+          .includes(term)
     );
   }
 
+
   get paginatedBalances(): OutstandingBalance[] {
-    const start = (this.currentPage - 1) * this.pageSize;
+    const start =
+      (this.currentPage - 1) *
+      this.pageSize;
 
     return this.filteredBalances.slice(
       start,
@@ -192,7 +137,8 @@ export class Finance implements OnInit {
 
   get totalPages(): number {
     const pages = Math.ceil(
-      this.filteredBalances.length / this.pageSize
+      this.filteredBalances.length /
+      this.pageSize
     );
 
     return Math.max(pages, 1);
@@ -203,15 +149,21 @@ export class Finance implements OnInit {
       return 0;
     }
 
-    return (this.currentPage - 1) * this.pageSize + 1;
+    return (
+      (this.currentPage - 1) *
+      this.pageSize
+    ) + 1;
   }
 
   get showingEnd(): number {
     return Math.min(
-      this.currentPage * this.pageSize,
+      this.currentPage *
+      this.pageSize,
+
       this.filteredBalances.length
     );
   }
+
 
   fetchData(): void {
     const buildingId = this.getBuildingId();
@@ -220,297 +172,320 @@ export class Finance implements OnInit {
     this.errorMessage = '';
 
     forkJoin({
-      report: this.http.get<FinancialReport>(
-        `${this.baseUrl}${this.reportPath}/financial/buildings/${buildingId}`
+      report:
+        this.financeService
+          .getFinancialReport(buildingId),
+
+      units: this.optionalRequest(
+        this.financeService.getUnits(),
+        [] as Unit[],
+        'unidades'
       ),
 
-      payments: this.http.get<Payment[]>(
-        `${this.baseUrl}/payments`
+      users: this.optionalRequest(
+        this.financeService.getUsers(),
+        [] as User[],
+        'usuarios'
       ),
 
-      debts: this.http.get<Debt[]>(
-        `${this.baseUrl}/payments/debts`
+      userUnits: this.optionalRequest(
+        this.financeService.getUserUnits(),
+        [] as UserUnit[],
+        'relaciones usuario-unidad'
       ),
 
-      units: this.http.get<Unit[]>(
-        `${this.baseUrl}/residential/units`
-      ),
-
-      users: this.http.get<User[]>(
-        `${this.baseUrl}/users`
-      ),
-
-      userUnits: this.http.get<UserUnit[]>(
-        `${this.baseUrl}/residential/user-units`
-      ),
-
-      buildings: this.http.get<Building[]>(
-        `${this.baseUrl}/residential/buildings`
+      buildings: this.optionalRequest(
+        this.financeService.getBuildings(),
+        [] as Building[],
+        'edificios'
       )
-    }).subscribe({
-      next: ({
-               report,
-               payments,
-               debts,
-               units,
-               users,
-               userUnits,
-               buildings
-             }) => {
-        this.allPayments = payments ?? [];
+    })
+      .pipe(
+        switchMap(baseData => {
+          const buildingUnits =
+            this.getUnitsForBuilding(
+              baseData.units,
+              buildingId
+            );
 
-        this.applyFinancialReport(report);
+          const residentIds =
+            this.getResidentIdsForUnits(
+              baseData.userUnits,
+              buildingUnits
+            );
 
-        this.calculateCharts();
+          return forkJoin({
+            report: of(baseData.report),
 
-        this.buildOutstandingBalances(
-          debts ?? [],
-          payments ?? [],
-          units ?? [],
-          users ?? [],
-          userUnits ?? [],
-          buildings ?? [],
-          buildingId
-        );
+            units: of(buildingUnits),
 
-        /*
-         * Si el reporte no devuelve estos valores,
-         * se calculan como respaldo con los datos actuales.
-         */
-        this.applyFallbackValues(
-          payments ?? [],
-          debts ?? [],
-          units ?? [],
-          buildingId,
-          report
-        );
+            users: of(baseData.users),
 
-        this.isLoading = false;
-      },
-      error: error => {
-        console.error(
-          'Error obteniendo la información financiera:',
-          error
-        );
+            userUnits: of(baseData.userUnits),
 
-        this.errorMessage =
-          'No se pudo cargar la información financiera. Verifique que el API Gateway y el servidor Node estén activos.';
+            buildings: of(baseData.buildings),
 
-        this.isLoading = false;
-      }
-    });
+
+            debts:
+              this.loadDebtsForUnits(
+                buildingUnits
+              ),
+
+            payments:
+              this.loadPaymentsForResidents(
+                residentIds
+              )
+          });
+        })
+      )
+      .subscribe({
+        next: ({
+                 report,
+                 units,
+                 users,
+                 userUnits,
+                 buildings,
+                 debts,
+                 payments
+               }) => {
+
+          this.applyFinancialReport(report);
+
+
+          this.allPayments =
+            this.removeDuplicatePayments(
+              payments
+            );
+
+          this.calculateCharts();
+
+
+          this.buildOutstandingBalances(
+            debts,
+            this.allPayments,
+            units,
+            users,
+            userUnits,
+            buildings,
+            buildingId
+          );
+
+          /*
+           * Ocupación calculada mediante Units.
+           */
+          this.calculateOccupancyRate(units);
+
+          /*
+           * Cantidad de unidades diferentes
+           * con saldo pendiente.
+           */
+          this.pendingUnitsCount =
+            new Set(
+              this.outstandingBalances.map(
+                balance => balance.unitId
+              )
+            ).size;
+
+          this.isLoading = false;
+        },
+
+        error: error => {
+          console.error(
+            'Error cargando el reporte financiero:',
+            error
+          );
+
+          this.errorMessage =
+            'No se pudo cargar el reporte financiero. ' +
+            'Verifique que el microservicio Report ' +
+            'esté activo y registrado en el API Gateway.';
+
+          this.isLoading = false;
+        }
+      });
   }
 
+  /**
+   * Asigna los valores exactos enviados por:
+   *
+   * FinancialReportResource.java
+   */
   private applyFinancialReport(
-    report: FinancialReport
+    report: FinancialReportResource
   ): void {
-    const paymentRevenue =
-      Number(report.dineroRecolectadoPorPagoDeuda ?? 0);
-
-    const areaRevenue =
-      Number(report.dineroRecolectadoPorPagoDeAreas ?? 0);
-
-    this.totalRevenue = Number(
-      report.totalRevenue ??
-      paymentRevenue + areaRevenue
+    const collectedFromDebts = Number(
+      report.totalCollectedFromDebts ?? 0
     );
 
+    const collectedFromReservations = Number(
+      report.totalCollectedFromReservations ?? 0
+    );
+
+    /*
+     * Total Revenue:
+     *
+     * dinero de deudas +
+     * dinero de reservas.
+     */
+    this.totalRevenue =
+      collectedFromDebts +
+      collectedFromReservations;
+
+    /*
+     * Deuda pendiente total.
+     */
     this.pendingDues = Number(
-      report.pendingDues ??
-      report.deudaTotal ??
-      0
+      report.totalDebt ?? 0
     );
 
+    /*
+     * Deuda vencida.
+     */
     this.arrears = Number(
-      report.arrears ??
-      report.deudaAtrasadaTotal ??
-      0
+      report.totalOverdueDebt ?? 0
     );
 
-    this.pendingUnitsCount = Number(
-      report.pendingUnitsCount ?? 0
-    );
+    /*
+     * Porcentaje de recaudación.
+     */
+    this.collectionRate =
+      this.normalizePercentage(
+        Number(report.collectionRate ?? 0)
+      );
 
-    this.collectionRate = this.clampPercentage(
-      Number(report.collectionRate ?? 0)
-    );
+    /*
+     * Porcentaje de morosidad enviado
+     * por Report.
+     */
+    this.overdueRate =
+      this.normalizePercentage(
+        Number(report.overdueRate ?? 0)
+      );
 
-    this.occupancyRate = this.clampPercentage(
-      Number(report.occupancyRate ?? 0)
-    );
+    /*
+     * Detalle de ingresos y penalidades
+     * por área común.
+     */
+    this.areaReports =
+      report.areas ?? [];
   }
 
-  private applyFallbackValues(
-    payments: Payment[],
-    debts: Debt[],
-    units: Unit[],
-    buildingId: number,
-    report: FinancialReport
-  ): void {
-    const buildingUnits = units.filter(unit =>
-      this.getUnitBuildingId(unit) === buildingId
-    );
+  /**
+   * Obtiene las deudas usando el endpoint
+   * existente por cada unidad.
+   */
+  private loadDebtsForUnits(
+    units: Unit[]
+  ): Observable<Debt[]> {
+    const unitIds = [
+      ...new Set(
+        units
+          .map(unit => this.getUnitId(unit))
+          .filter(unitId => unitId > 0)
+      )
+    ];
 
-    const buildingUnitIds = new Set(
-      buildingUnits.map(unit => Number(unit.id))
-    );
-
-    const buildingDebts = debts.filter(debt =>
-      buildingUnitIds.has(this.getDebtUnitId(debt))
-    );
-
-    const pendingDebts = buildingDebts.filter(debt =>
-      debt.status?.toUpperCase() === 'PENDING'
-    );
-
-    const now = new Date();
-
-    const overdueDebts = pendingDebts.filter(debt =>
-      this.isDateBeforeToday(debt.dueDate, now)
-    );
-
-    const paidPayments = payments.filter(payment =>
-      payment.status?.toUpperCase() === 'PAID'
-    );
-
-    const paidAmount = paidPayments.reduce(
-      (sum, payment) =>
-        sum + Number(payment.amount ?? 0),
-      0
-    );
-
-    const pendingAmount = pendingDebts.reduce(
-      (sum, debt) =>
-        sum + Number(debt.amount ?? 0),
-      0
-    );
-
-    const overdueAmount = overdueDebts.reduce(
-      (sum, debt) =>
-        sum + Number(debt.amount ?? 0),
-      0
-    );
-
-    if (
-      report.totalRevenue === undefined &&
-      report.dineroRecolectadoPorPagoDeuda === undefined
-    ) {
-      this.totalRevenue = paidAmount;
+    if (unitIds.length === 0) {
+      return of([]);
     }
 
-    if (
-      report.pendingDues === undefined &&
-      report.deudaTotal === undefined
-    ) {
-      this.pendingDues = pendingAmount;
-    }
+    const requests = unitIds.map(unitId =>
+      this.optionalRequest(
+        this.financeService
+          .getDebtsByUnit(unitId),
 
-    if (
-      report.arrears === undefined &&
-      report.deudaAtrasadaTotal === undefined
-    ) {
-      this.arrears = overdueAmount;
-    }
+        [] as Debt[],
 
-    if (report.pendingUnitsCount === undefined) {
-      this.pendingUnitsCount = new Set(
-        pendingDebts.map(debt =>
-          this.getDebtUnitId(debt)
+        `deudas de la unidad ${unitId}`
+      ).pipe(
+        map(debts =>
+          debts.map(debt => ({
+            ...debt,
+
+            /*
+             * Asegura que la deuda mantenga
+             * la unidad consultada aunque
+             * el backend no envíe unitId.
+             */
+            unitId:
+              debt.unitId ??
+              debt.idUnit ??
+              unitId
+          }))
         )
-      ).size;
-    }
-
-    if (report.collectionRate === undefined) {
-      const expectedAmount =
-        paidAmount + pendingAmount;
-
-      this.collectionRate =
-        expectedAmount === 0
-          ? 0
-          : this.clampPercentage(
-            (paidAmount / expectedAmount) * 100
-          );
-    }
-
-    if (report.occupancyRate === undefined) {
-      const occupiedUnits = buildingUnits.filter(unit =>
-        unit.status?.toUpperCase() === 'OCCUPIED'
-      ).length;
-
-      this.occupancyRate =
-        buildingUnits.length === 0
-          ? 0
-          : this.clampPercentage(
-            (occupiedUnits / buildingUnits.length) * 100
-          );
-    }
-  }
-
-  calculateCharts(): void {
-    const monthlyMap = new Map<string, number>();
-
-    this.allPayments.forEach(payment => {
-      if (payment.status?.toUpperCase() !== 'PAID') {
-        return;
-      }
-
-      const paymentDate = new Date(
-        payment.paymentDate
-      );
-
-      if (Number.isNaN(paymentDate.getTime())) {
-        return;
-      }
-
-      const key = this.getMonthKey(paymentDate);
-      const currentAmount = monthlyMap.get(key) ?? 0;
-
-      monthlyMap.set(
-        key,
-        currentAmount + Number(payment.amount ?? 0)
-      );
-    });
-
-    const monthsCount =
-      Number.parseInt(this.selectedPeriod, 10) || 6;
-
-    const today = new Date();
-
-    this.monthlyRevenue = Array.from(
-      { length: monthsCount },
-      (_, index) => {
-        const monthsAgo =
-          monthsCount - index - 1;
-
-        const date = new Date(
-          today.getFullYear(),
-          today.getMonth() - monthsAgo,
-          1
-        );
-
-        const key = this.getMonthKey(date);
-
-        return {
-          key,
-          month: date
-            .toLocaleString('en-US', {
-              month: 'short'
-            })
-            .toUpperCase(),
-          amount: monthlyMap.get(key) ?? 0
-        };
-      }
+      )
     );
 
-    const amounts =
-      this.monthlyRevenue.map(item => item.amount);
-
-    this.maxRevenue = Math.max(
-      ...amounts,
-      1
+    return forkJoin(requests).pipe(
+      map(groups =>
+        this.removeDuplicateDebts(
+          groups.flat()
+        )
+      )
     );
   }
 
+  /**
+   * Obtiene los pagos usando el endpoint
+   * existente por cada usuario.
+   */
+  private loadPaymentsForResidents(
+    residentIds: number[]
+  ): Observable<Payment[]> {
+    const uniqueResidentIds = [
+      ...new Set(
+        residentIds.filter(
+          residentId =>
+            residentId > 0
+        )
+      )
+    ];
+
+    if (uniqueResidentIds.length === 0) {
+      return of([]);
+    }
+
+    const requests =
+      uniqueResidentIds.map(residentId =>
+        this.optionalRequest(
+          this.financeService
+            .getPaymentsByUser(residentId),
+
+          [] as Payment[],
+
+          `pagos del usuario ${residentId}`
+        ).pipe(
+          map(payments =>
+            payments.map(payment => ({
+              ...payment,
+
+              /*
+               * Asegura que cada pago tenga
+               * el usuario consultado.
+               */
+              userId:
+                payment.userId ??
+                payment.idUser ??
+                residentId
+            }))
+          )
+        )
+      );
+
+    return forkJoin(requests).pipe(
+      map(groups =>
+        this.removeDuplicatePayments(
+          groups.flat()
+        )
+      )
+    );
+  }
+
+  /**
+   * Construye la tabla:
+   *
+   * Residents with Outstanding Balances.
+   */
   private buildOutstandingBalances(
     debts: Debt[],
     payments: Payment[],
@@ -520,147 +495,510 @@ export class Finance implements OnInit {
     buildings: Building[],
     buildingId: number
   ): void {
-    const buildingUnits = units.filter(unit =>
-      this.getUnitBuildingId(unit) === buildingId
+    const pendingDebts = debts.filter(
+      debt =>
+        this.isPendingDebt(debt.status)
     );
 
-    const buildingUnitIds = new Set(
-      buildingUnits.map(unit => Number(unit.id))
-    );
+    const today = new Date();
 
-    const pendingDebts = debts.filter(debt =>
-      debt.status?.toUpperCase() === 'PENDING' &&
-      buildingUnitIds.has(this.getDebtUnitId(debt))
-    );
+    today.setHours(0, 0, 0, 0);
 
-    const now = new Date();
+    this.outstandingBalances =
+      pendingDebts
+        .map(debt => {
+          const debtId =
+            Number(debt.id);
 
-    this.outstandingBalances = pendingDebts.map(debt => {
-      const unitId = this.getDebtUnitId(debt);
+          const unitId =
+            this.getDebtUnitId(debt);
 
-      const unit = buildingUnits.find(
-        currentUnit =>
-          Number(currentUnit.id) === unitId
-      );
-
-      const userUnit = userUnits.find(
-        currentRelation =>
-          this.getUserUnitUnitId(currentRelation) === unitId
-      );
-
-      const residentId = userUnit
-        ? this.getUserUnitUserId(userUnit)
-        : null;
-
-      const user = residentId !== null
-        ? users.find(
-          currentUser =>
-            Number(currentUser.id) === residentId
-        )
-        : undefined;
-
-      const unitBuildingId = unit
-        ? this.getUnitBuildingId(unit)
-        : buildingId;
-
-      const building = buildings.find(
-        currentBuilding =>
-          Number(currentBuilding.id) === unitBuildingId
-      );
-
-      const dueDate = new Date(debt.dueDate);
-      const isOverdue =
-        !Number.isNaN(dueDate.getTime()) &&
-        dueDate.getTime() < now.getTime();
-
-      const overdueDays = isOverdue
-        ? Math.max(
-          1,
-          Math.ceil(
-            (
-              now.getTime() -
-              dueDate.getTime()
-            ) /
-            (1000 * 60 * 60 * 24)
-          )
-        )
-        : 0;
-
-      const userPayments = residentId === null
-        ? []
-        : payments
-          .filter(payment =>
-            this.getPaymentUserId(payment) ===
-            residentId
-          )
-          .sort(
-            (first, second) =>
-              new Date(second.paymentDate).getTime() -
-              new Date(first.paymentDate).getTime()
+          const unit = units.find(
+            currentUnit =>
+              this.getUnitId(currentUnit) ===
+              unitId
           );
 
-      const lastPaymentDate =
-        userPayments.length > 0
-          ? this.formatDate(
-            userPayments[0].paymentDate
-          )
-          : 'No payments';
+          const relationsForUnit =
+            userUnits.filter(
+              relation =>
+                this.getUserUnitUnitId(
+                  relation
+                ) === unitId
+            );
 
-      const residentName =
-        user?.fullName ?? 'Unknown';
+          const activeRelation =
+            relationsForUnit.find(
+              relation =>
+                !relation.status ||
+                relation.status.toUpperCase() ===
+                'ACTIVE'
+            ) ??
+            relationsForUnit[0];
 
-      const unitNumber =
-        unit?.unitNumber ?? 'N/A';
+          const residentId =
+            activeRelation
+              ? this.getUserUnitUserId(
+                activeRelation
+              )
+              : null;
 
-      return {
-        debtId: Number(debt.id),
-        residentId,
-        unitId,
+          const user =
+            residentId !== null
+              ? users.find(
+                currentUser =>
+                  this.getUserId(
+                    currentUser
+                  ) === residentId
+              )
+              : undefined;
 
-        unitAndResident:
-          `Unit ${unitNumber} - ${residentName}`,
+          const residentName =
+            this.getUserName(user);
 
-        residentName,
+          const unitNumber =
+            this.getUnitNumber(unit);
 
-        initials:
-          this.getInitials(residentName),
+          const unitBuildingId =
+            unit
+              ? this.getUnitBuildingId(unit) ??
+              buildingId
+              : buildingId;
 
-        unitDetails:
-          `Unit ${unitNumber}`,
+          const building =
+            buildings.find(
+              currentBuilding =>
+                this.getBuildingEntityId(
+                  currentBuilding
+                ) === unitBuildingId
+            );
 
-        buildingName:
-          building?.name ?? 'Unknown building',
+          const buildingName =
+            this.getBuildingName(building);
 
-        status: isOverdue
-          ? `OVERDUE ${overdueDays} DAYS`
-          : 'GRACE PERIOD',
+          /*
+           * Pagos asociados directamente
+           * con esta deuda.
+           */
+          const debtPayments =
+            payments.filter(
+              payment =>
+                this.getPaymentDebtId(
+                  payment
+                ) === debtId &&
+                this.isSuccessfulPayment(
+                  payment.status
+                )
+            );
 
-        statusClass: isOverdue
-          ? 'status-overdue'
-          : 'status-grace',
+          /*
+           * Pagos generales del residente,
+           * usados como respaldo para mostrar
+           * la fecha del último pago.
+           */
+          const residentPayments =
+            residentId === null
+              ? []
+              : payments.filter(
+                payment =>
+                  this.getPaymentUserId(
+                    payment
+                  ) === residentId &&
+                  this.isSuccessfulPayment(
+                    payment.status
+                  )
+              );
 
-        lastPaymentDate,
+          const paidForDebt =
+            debtPayments.reduce(
+              (sum, payment) =>
+                sum +
+                Number(
+                  payment.amount ?? 0
+                ),
+              0
+            );
 
-        amountDue: Number(debt.amount ?? 0)
-      };
-    });
+          const debtAmount =
+            Number(debt.amount ?? 0);
+
+          const amountDue = Math.max(
+            0,
+            debtAmount - paidForDebt
+          );
+
+          const paymentsForLastDate =
+            debtPayments.length > 0
+              ? debtPayments
+              : residentPayments;
+
+          const orderedPayments =
+            [...paymentsForLastDate].sort(
+              (first, second) =>
+                this.getDateTimestamp(
+                  second.paymentDate
+                ) -
+                this.getDateTimestamp(
+                  first.paymentDate
+                )
+            );
+
+          const lastPaymentDate =
+            orderedPayments.length > 0
+              ? this.formatDate(
+                orderedPayments[0]
+                  .paymentDate
+              )
+              : 'No payments';
+
+          const dueDate =
+            new Date(debt.dueDate);
+
+          dueDate.setHours(0, 0, 0, 0);
+
+          const validDueDate =
+            !Number.isNaN(
+              dueDate.getTime()
+            );
+
+          const isOverdue =
+            validDueDate &&
+            dueDate.getTime() <
+            today.getTime();
+
+          const overdueDays =
+            isOverdue
+              ? Math.max(
+                1,
+                Math.ceil(
+                  (
+                    today.getTime() -
+                    dueDate.getTime()
+                  ) /
+                  (
+                    1000 *
+                    60 *
+                    60 *
+                    24
+                  )
+                )
+              )
+              : 0;
+
+          const balance:
+            OutstandingBalance = {
+            debtId,
+            residentId,
+            unitId,
+
+            unitAndResident:
+              `Unit ${unitNumber} - ` +
+              `${residentName}`,
+
+            residentName,
+
+            initials:
+              this.getInitials(
+                residentName
+              ),
+
+            unitDetails:
+              `Unit ${unitNumber}`,
+
+            buildingName,
+
+            status: isOverdue
+              ? `OVERDUE ${overdueDays} DAYS`
+              : 'GRACE PERIOD',
+
+            statusClass: isOverdue
+              ? 'status-overdue'
+              : 'status-grace',
+
+            lastPaymentDate,
+
+            amountDue
+          };
+
+          return balance;
+        })
+        /*
+         * No muestra una deuda que ya fue
+         * completamente pagada.
+         */
+        .filter(
+          balance =>
+            balance.amountDue > 0
+        )
+        /*
+         * Ordena primero las vencidas.
+         */
+        .sort((first, second) => {
+          const firstOverdue =
+            first.statusClass ===
+            'status-overdue'
+              ? 0
+              : 1;
+
+          const secondOverdue =
+            second.statusClass ===
+            'status-overdue'
+              ? 0
+              : 1;
+
+          return (
+            firstOverdue -
+            secondOverdue
+          );
+        });
 
     this.currentPage = 1;
+  }
+
+  /**
+   * Genera el gráfico mensual mediante
+   * los pagos de los residentes.
+   */
+  calculateCharts(): void {
+    const monthlyMap =
+      new Map<string, number>();
+
+    this.allPayments.forEach(payment => {
+      if (
+        !this.isSuccessfulPayment(
+          payment.status
+        )
+      ) {
+        return;
+      }
+
+      const paymentDate =
+        new Date(payment.paymentDate);
+
+      if (
+        Number.isNaN(
+          paymentDate.getTime()
+        )
+      ) {
+        return;
+      }
+
+      const key =
+        this.getMonthKey(paymentDate);
+
+      const currentAmount =
+        monthlyMap.get(key) ?? 0;
+
+      monthlyMap.set(
+        key,
+        currentAmount +
+        Number(payment.amount ?? 0)
+      );
+    });
+
+    const monthsCount =
+      Number.parseInt(
+        this.selectedPeriod,
+        10
+      ) || 6;
+
+    const today = new Date();
+
+    this.monthlyRevenue =
+      Array.from(
+        {
+          length: monthsCount
+        },
+        (_, index) => {
+          const monthsAgo =
+            monthsCount -
+            index -
+            1;
+
+          const date = new Date(
+            today.getFullYear(),
+            today.getMonth() -
+            monthsAgo,
+            1
+          );
+
+          const key =
+            this.getMonthKey(date);
+
+          return {
+            key,
+
+            month: date
+              .toLocaleString(
+                'en-US',
+                {
+                  month: 'short'
+                }
+              )
+              .toUpperCase(),
+
+            amount:
+              monthlyMap.get(key) ??
+              0
+          };
+        }
+      );
+
+    const amounts =
+      this.monthlyRevenue.map(
+        item => item.amount
+      );
+
+    this.maxRevenue = Math.max(
+      ...amounts,
+      1
+    );
+  }
+
+  /**
+   * Calcula la ocupación usando únicamente
+   * las unidades del edificio.
+   */
+  private calculateOccupancyRate(
+    units: Unit[]
+  ): void {
+    const occupiedUnits =
+      units.filter(
+        unit =>
+          unit.status
+            ?.toUpperCase() ===
+          'OCCUPIED'
+      ).length;
+
+    this.occupancyRate =
+      units.length === 0
+        ? 0
+        : Number(
+          (
+            (
+              occupiedUnits /
+              units.length
+            ) *
+            100
+          ).toFixed(1)
+        );
+  }
+
+  /**
+   * Devuelve solamente las unidades
+   * correspondientes al edificio.
+   *
+   * Si el backend no envía buildingId,
+   * conserva todas las unidades como respaldo.
+   */
+  private getUnitsForBuilding(
+    units: Unit[],
+    buildingId: number
+  ): Unit[] {
+    const unitsWithBuilding =
+      units.filter(
+        unit =>
+          this.getUnitBuildingId(
+            unit
+          ) !== null
+      );
+
+    if (unitsWithBuilding.length === 0) {
+      return units;
+    }
+
+    return units.filter(
+      unit =>
+        this.getUnitBuildingId(unit) ===
+        buildingId
+    );
+  }
+
+  /**
+   * Obtiene los residentes asociados
+   * con las unidades del edificio.
+   */
+  private getResidentIdsForUnits(
+    userUnits: UserUnit[],
+    units: Unit[]
+  ): number[] {
+    const unitIds =
+      new Set(
+        units.map(
+          unit =>
+            this.getUnitId(unit)
+        )
+      );
+
+    return [
+      ...new Set(
+        userUnits
+          .filter(
+            relation =>
+              unitIds.has(
+                this.getUserUnitUnitId(
+                  relation
+                )
+              )
+          )
+          .map(
+            relation =>
+              this.getUserUnitUserId(
+                relation
+              )
+          )
+          .filter(
+            residentId =>
+              residentId !== null &&
+              residentId > 0
+          )
+      )
+    ] as number[];
+  }
+
+  /**
+   * Las solicitudes auxiliares no cancelan
+   * el reporte si devuelven error.
+   */
+  private optionalRequest<T>(
+    request: Observable<T>,
+    fallback: T,
+    requestName: string
+  ): Observable<T> {
+    return request.pipe(
+      catchError(error => {
+        console.error(
+          `Error cargando ${requestName}:`,
+          {
+            status: error.status,
+            message: error.message,
+            error: error.error
+          }
+        );
+
+        return of(fallback);
+      })
+    );
   }
 
   sendNotice(
     balance: OutstandingBalance
   ): void {
-    if (!balance.residentId) {
+    if (balance.residentId === null) {
       alert(
         'No se encontró el usuario asociado a esta deuda.'
       );
+
       return;
     }
 
-    const request: CreateNotificationRequest = {
+    const request:
+      CreateNotificationRequest = {
       userId: balance.residentId,
-      title: 'Outstanding payment notice',
+
+      title:
+        'Outstanding payment notice',
+
       content:
         `You have an outstanding balance of ` +
         `$${balance.amountDue.toFixed(2)} ` +
@@ -671,36 +1009,42 @@ export class Finance implements OnInit {
     this.sendingNotificationForDebtId =
       balance.debtId;
 
-    this.http.post(
-      `${this.baseUrl}${this.notificationPath}`,
-      request
-    ).subscribe({
-      next: () => {
-        this.sendingNotificationForDebtId = null;
+    this.financeService
+      .sendNotification(request)
+      .subscribe({
+        next: () => {
+          this.sendingNotificationForDebtId =
+            null;
 
-        alert(
-          `Notification sent successfully to ${balance.residentName}.`
-        );
-      },
-      error: error => {
-        console.error(
-          'Error enviando la notificación:',
-          error
-        );
+          alert(
+            `Notification sent successfully ` +
+            `to ${balance.residentName}.`
+          );
+        },
 
-        this.sendingNotificationForDebtId = null;
+        error: error => {
+          console.error(
+            'Error enviando la notificación:',
+            error
+          );
 
-        alert(
-          'No se pudo enviar la notificación.'
-        );
-      }
-    });
+          this.sendingNotificationForDebtId =
+            null;
+
+          alert(
+            'No se pudo enviar la notificación.'
+          );
+        }
+      });
   }
 
   onSearch(event: Event): void {
-    const input = event.target as HTMLInputElement;
+    const input =
+      event.target as HTMLInputElement;
 
-    this.searchTerm = input.value;
+    this.searchTerm =
+      input.value;
+
     this.currentPage = 1;
   }
 
@@ -709,7 +1053,10 @@ export class Finance implements OnInit {
   }
 
   nextPage(): void {
-    if (this.currentPage < this.totalPages) {
+    if (
+      this.currentPage <
+      this.totalPages
+    ) {
       this.currentPage++;
     }
   }
@@ -744,7 +1091,8 @@ export class Finance implements OnInit {
   getInitials(name: string): string {
     if (
       !name ||
-      name.toLowerCase() === 'unknown'
+      name.toLowerCase() ===
+      'unknown'
     ) {
       return 'UN';
     }
@@ -766,12 +1114,18 @@ export class Finance implements OnInit {
       .toUpperCase();
   }
 
+  /**
+   * Obtiene buildingId desde localStorage.
+   */
   private getBuildingId(): number {
     const directBuildingId =
-      localStorage.getItem('buildingId');
+      localStorage.getItem(
+        'buildingId'
+      );
 
     if (directBuildingId) {
-      const parsedId = Number(directBuildingId);
+      const parsedId =
+        Number(directBuildingId);
 
       if (!Number.isNaN(parsedId)) {
         return parsedId;
@@ -779,16 +1133,25 @@ export class Finance implements OnInit {
     }
 
     const storedUser =
-      localStorage.getItem('currentUser') ??
-      localStorage.getItem('user');
+      localStorage.getItem(
+        'currentUser'
+      ) ??
+      localStorage.getItem(
+        'user'
+      ) ??
+      localStorage.getItem(
+        'authUser'
+      );
 
     if (storedUser) {
       try {
-        const user = JSON.parse(storedUser);
+        const user =
+          JSON.parse(storedUser);
 
         const parsedId = Number(
           user.buildingId ??
-          user.idBuilding
+          user.idBuilding ??
+          user.building?.id
         );
 
         if (!Number.isNaN(parsedId)) {
@@ -803,24 +1166,63 @@ export class Finance implements OnInit {
     }
 
     /*
-     * Respaldo temporal para realizar pruebas.
-     * Luego puedes eliminarlo cuando el login
-     * siempre guarde el buildingId.
+     * Respaldo temporal.
      */
     return 1;
   }
 
-  private getMonthKey(date: Date): string {
-    return (
-      `${date.getFullYear()}-` +
-      `${String(date.getMonth() + 1).padStart(2, '0')}`
+  private normalizePercentage(
+    value: number
+  ): number {
+    if (!Number.isFinite(value)) {
+      return 0;
+    }
+
+    /*
+     * Soporta:
+     *
+     * 0.75 = 75 %
+     * 75   = 75 %
+     */
+    const percentage =
+      value > 0 &&
+      value <= 1
+        ? value * 100
+        : value;
+
+    return Number(
+      Math.min(
+        100,
+        Math.max(
+          0,
+          percentage
+        )
+      ).toFixed(1)
     );
   }
 
-  private formatDate(dateValue: string): string {
-    const date = new Date(dateValue);
+  private getMonthKey(
+    date: Date
+  ): string {
+    return (
+      `${date.getFullYear()}-` +
+      `${String(
+        date.getMonth() + 1
+      ).padStart(2, '0')}`
+    );
+  }
 
-    if (Number.isNaN(date.getTime())) {
+  private formatDate(
+    dateValue: string
+  ): string {
+    const date =
+      new Date(dateValue);
+
+    if (
+      Number.isNaN(
+        date.getTime()
+      )
+    ) {
       return 'Invalid date';
     }
 
@@ -834,30 +1236,91 @@ export class Finance implements OnInit {
     );
   }
 
-  private clampPercentage(
-    value: number
+  private getDateTimestamp(
+    dateValue: string
   ): number {
-    if (!Number.isFinite(value)) {
-      return 0;
-    }
+    const timestamp =
+      new Date(dateValue).getTime();
 
-    return Math.min(
-      100,
-      Math.max(0, value)
+    return Number.isNaN(timestamp)
+      ? 0
+      : timestamp;
+  }
+
+  private isPendingDebt(
+    status?: string
+  ): boolean {
+    const normalizedStatus =
+      status?.toUpperCase() ?? '';
+
+    return [
+      'PENDING',
+      'OVERDUE',
+      'UNPAID',
+      'PARTIAL'
+    ].includes(normalizedStatus);
+  }
+
+  private isSuccessfulPayment(
+    status?: string
+  ): boolean {
+    const normalizedStatus =
+      status?.toUpperCase() ?? '';
+
+    return [
+      'PAID',
+      'CONFIRMED',
+      'COMPLETED',
+      'SUCCESS'
+    ].includes(normalizedStatus);
+  }
+
+  private removeDuplicateDebts(
+    debts: Debt[]
+  ): Debt[] {
+    const mapById =
+      new Map<number, Debt>();
+
+    debts.forEach(debt => {
+      const id = Number(debt.id);
+
+      if (!Number.isNaN(id)) {
+        mapById.set(id, debt);
+      }
+    });
+
+    return Array.from(
+      mapById.values()
     );
   }
 
-  private isDateBeforeToday(
-    dateValue: string,
-    today: Date
-  ): boolean {
-    const date = new Date(dateValue);
+  private removeDuplicatePayments(
+    payments: Payment[]
+  ): Payment[] {
+    const mapById =
+      new Map<number, Payment>();
 
-    if (Number.isNaN(date.getTime())) {
-      return false;
-    }
+    payments.forEach(payment => {
+      const id = Number(payment.id);
 
-    return date.getTime() < today.getTime();
+      if (!Number.isNaN(id)) {
+        mapById.set(id, payment);
+      }
+    });
+
+    return Array.from(
+      mapById.values()
+    );
+  }
+
+  private getUnitId(
+    unit: Unit
+  ): number {
+    return Number(
+      unit.idUnit ??
+      unit.id ??
+      0
+    );
   }
 
   private getDebtUnitId(
@@ -866,6 +1329,16 @@ export class Finance implements OnInit {
     return Number(
       debt.unitId ??
       debt.idUnit ??
+      0
+    );
+  }
+
+  private getPaymentDebtId(
+    payment: Payment
+  ): number {
+    return Number(
+      payment.debtId ??
+      payment.idDebt ??
       0
     );
   }
@@ -882,12 +1355,24 @@ export class Finance implements OnInit {
 
   private getUnitBuildingId(
     unit: Unit
-  ): number {
-    return Number(
+  ): number | null {
+    const value =
       unit.idBuilding ??
-      unit.buildingId ??
-      0
-    );
+      unit.buildingId;
+
+    if (
+      value === undefined ||
+      value === null
+    ) {
+      return null;
+    }
+
+    const parsedValue =
+      Number(value);
+
+    return Number.isNaN(parsedValue)
+      ? null
+      : parsedValue;
   }
 
   private getUserUnitUnitId(
@@ -902,11 +1387,88 @@ export class Finance implements OnInit {
 
   private getUserUnitUserId(
     userUnit: UserUnit
-  ): number {
-    return Number(
+  ): number | null {
+    const value =
       userUnit.idUser ??
       userUnit.userId ??
+      userUnit.residentId;
+
+    if (
+      value === undefined ||
+      value === null
+    ) {
+      return null;
+    }
+
+    const parsedValue =
+      Number(value);
+
+    return Number.isNaN(parsedValue)
+      ? null
+      : parsedValue;
+  }
+
+  private getUserId(
+    user: User
+  ): number {
+    return Number(
+      user.idUser ??
+      user.id ??
       0
+    );
+  }
+
+  private getUserName(
+    user?: User
+  ): string {
+    if (!user) {
+      return 'Unknown';
+    }
+
+    return (
+      user.fullName ??
+      user.name ??
+      user.email ??
+      'Unknown'
+    );
+  }
+
+  private getUnitNumber(
+    unit?: Unit
+  ): string {
+    if (!unit) {
+      return 'N/A';
+    }
+
+    return String(
+      unit.unitNumber ??
+      unit.number ??
+      unit.name ??
+      'N/A'
+    );
+  }
+
+  private getBuildingEntityId(
+    building: Building
+  ): number {
+    return Number(
+      building.idBuilding ??
+      building.id ??
+      0
+    );
+  }
+
+  private getBuildingName(
+    building?: Building
+  ): string {
+    if (!building) {
+      return 'Unknown building';
+    }
+
+    return (
+      building.name ??
+      building.buildingName ??
+      'Unknown building'
     );
   }
 }

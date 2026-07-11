@@ -1,30 +1,60 @@
 export const environment = {
-  production: true,
+  production: false,
 
-  serverBaseUrl: 'https://edifika-apigateway.onrender.com/api/v1',
+  serverBaseUrl:
+    'https://edifika-apigateway.onrender.com/api/v1',
 
-  authenticationEndpointPath: '/authentication',
-  userEndpointPath: '/users',
-  rolesEndpointPath: '/roles',
+  authenticationEndpointPath:
+    '/authentication',
 
-  residentialEndpointPath: '/residential',
-  buildingEndpointPath: '/residential/buildings',
-  unitEndpointPath: '/residential/units',
-  userUnitEndpointPath: '/residential/user-units',
+  userEndpointPath:
+    '/users',
 
-  reservationEndpointPath: '/reservations',
-  commonAreaEndpointPath: '/common-areas',
-  commonAreaRulesEndpointPath: '/common-area-rules',
+  rolesEndpointPath:
+    '/roles',
 
-  paymentEndpointPath: '/payments',
-  debtEndpointPath: '/payments/debts',
+  residentialEndpointPath:
+    '/residential',
 
-  postEndpointPath: '/posts',
+  buildingEndpointPath:
+    '/residential/buildings',
 
-  announcementEndpointPath: '/announcements',
-  announcementReadEndpointPath: '/announcement-reads',
+  unitEndpointPath:
+    '/residential/units',
 
-  notificationEndpointPath: '/api/v1/notifications',
-  deviceTokenEndpointPath: '/api/v1/device-tokens',
-  reportEndpointPath: '/api/v1/reports'
+  userUnitEndpointPath:
+    '/residential/user-units',
+
+  reservationEndpointPath:
+    '/reservations',
+
+  commonAreaEndpointPath:
+    '/common-areas',
+
+  commonAreaRulesEndpointPath:
+    '/common-area-rules',
+
+  paymentEndpointPath:
+    '/payments',
+
+  debtEndpointPath:
+    '/payments/debts',
+
+  postEndpointPath:
+    '/posts',
+
+  announcementEndpointPath:
+    '/announcements',
+
+  announcementReadEndpointPath:
+    '/announcement-reads',
+
+  notificationEndpointPath:
+    '/notifications',
+
+  deviceTokenEndpointPath:
+    '/device-tokens',
+
+  reportEndpointPath:
+    '/reports'
 };
